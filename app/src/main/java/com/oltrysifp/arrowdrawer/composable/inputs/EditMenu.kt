@@ -63,8 +63,6 @@ fun EditMenu(
 
     var isCustomCoefficient by remember { mutableStateOf(line.customCoefficient != null) }
     var isCustomSize by remember { mutableStateOf(line.customSize != null) }
-    log(line.customSize)
-    log(line.customCoefficient)
     var inheritSizeWarning by remember { mutableStateOf(false) }
 
     val color = remember { mutableStateOf(line.color) }

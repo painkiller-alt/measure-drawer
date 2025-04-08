@@ -13,11 +13,20 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.forEachGesture
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -35,14 +44,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
@@ -55,11 +72,13 @@ import com.oltrysifp.arrowdrawer.draw.drawArrow
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
 import com.oltrysifp.arrowdrawer.bitmap.loadBitmapFromUri
+import com.oltrysifp.arrowdrawer.bitmap.saveImage
 import com.oltrysifp.arrowdrawer.composable.ArrowMagnifier
 import com.oltrysifp.arrowdrawer.composable.onArrow.EndContent
 import com.oltrysifp.arrowdrawer.composable.onArrow.StartContent
 import com.oltrysifp.arrowdrawer.draw.drawAllAndExport
 import com.oltrysifp.arrowdrawer.util.log
+import nl.birdly.zoombox.zoomable
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
@@ -82,9 +101,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@SuppressLint("UnrememberedMutableState")
 @Composable
 fun MainScreen() {
+    ZoomableImage()
+
+    return
+
     val mContext = LocalContext.current
     val displayMetrics = mContext.resources.displayMetrics
     val screenWidth = displayMetrics.widthPixels
@@ -94,18 +116,16 @@ fun MainScreen() {
     var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
     var loaded by remember { mutableStateOf(false) }
 
-    var imageOffset by remember { mutableStateOf(Offset(0f, 0f)) }
+    var imageOffset by remember { mutableStateOf(Offset.Zero) }
     var imageScale by remember { mutableFloatStateOf(1f) }
     var screenImageScale by remember { mutableFloatStateOf(1f) }
 
     var isDrawMode by remember { mutableStateOf(true) }
     var isDragging by remember { mutableStateOf(false) }
-    var lastZoomingPoint by remember { mutableStateOf(Offset(0f,0f)) }
-    var zoomingPoint by remember { mutableStateOf(Offset(0f,0f)) }
 
     val offsetThreshold = 50f
-    var initialOffset by remember { mutableStateOf(Offset(0f, 0f)) }
-    var generalOffset by remember { mutableStateOf(Offset(0f, 0f)) }
+    var initialOffset by remember { mutableStateOf(Offset.Zero) }
+    var generalOffset by remember { mutableStateOf(Offset.Zero) }
     var lineCreated by remember { mutableStateOf(false) }
 
     val globalLine = remember { mutableStateOf<Line?>(null) }
@@ -154,8 +174,9 @@ fun MainScreen() {
         }
     }
 
-    val onDrag = { offset: Offset, zoom: Float ->
-        if (isDrawMode) {
+    val onDrag = { offset: Offset, zoom: Float, fingersCount: Int ->
+        if (fingersCount < 2) {
+            log(offset)
             generalOffset += offset
 
             if (
@@ -186,11 +207,7 @@ fun MainScreen() {
             }
         } else {
             screenImageScale *= zoom
-
-            imageOffset += Offset(
-                offset.x,
-                offset.y
-            )
+            imageOffset += offset
         }
     }
 
@@ -239,29 +256,25 @@ fun MainScreen() {
                             val position = firstDown.position
                             var offset = Offset.Zero + position
 
-                            lastZoomingPoint = zoomingPoint
-                            zoomingPoint = Offset(
-                                (position.x-imageOffset.x) / bt.width,
-                                (position.y-imageOffset.y) / bt.height
-                            )
-
                             do {
                                 val event = awaitPointerEvent()
+                                val fingersCount = event.changes.count()
                                 val canceled = event.changes.fastAny { it.isConsumed }
 
                                 if (!canceled) {
                                     val zoom = event.calculateZoom()
                                     val pan = event.calculatePan()
 
+
                                     if (!isDragging) {
-                                        log("start")
-                                        isDragging = true // Drag started
+                                        isDragging = true
                                         offset += pan
                                         onDragStart(offset)
                                     } else {
                                         onDrag(
                                             pan,
-                                            zoom
+                                            zoom,
+                                            fingersCount
                                         )
                                     }
 
@@ -283,18 +296,12 @@ fun MainScreen() {
                 Image(
                     modifier = Modifier
                         .wrapContentSize(unbounded = true, align = Alignment.TopStart)
-                        .offset {
-                            IntOffset(
-                                imageOffset.x.toInt(),
-                                imageOffset.y.toInt()
-                            )
-                        }
                         .graphicsLayer {
-                            log(zoomingPoint)
-                            log(lastZoomingPoint.y-zoomingPoint.y)
-                            transformOrigin = TransformOrigin(zoomingPoint.x,zoomingPoint.y)
+                            transformOrigin = TransformOrigin(0f, 0f)
                             scaleX *= imageScale * screenImageScale
                             scaleY *= imageScale * screenImageScale
+                            translationX = imageOffset.x
+                            translationY = imageOffset.y
                         },
                     bitmap = bt.asImageBitmap(),
                     contentScale = ContentScale.None,
@@ -382,4 +389,16 @@ fun MainScreen() {
             )
         }
     }
+}
+
+@Composable
+fun ZoomableImage() {
+    Image(
+        painter = painterResource(R.drawable.ic_launcher_background),
+        modifier = Modifier
+            .fillMaxSize()
+            .zoomable(),
+        contentScale = ContentScale.Crop,
+        contentDescription = null
+    )
 }
