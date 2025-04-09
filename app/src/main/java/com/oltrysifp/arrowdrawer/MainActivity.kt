@@ -38,6 +38,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
@@ -155,20 +156,27 @@ fun MainScreen() {
         }
     }
 
-    val onDrag = { offset: Offset, zoom: Float, fingersCount: Int ->
+    val onDrag = { event: PointerEvent, fingersCount: Int ->
+        val pan = event.calculatePan()
+        val zoom = event.calculateZoom()
+
         if (fingersCount < 2) {
-            log(offset)
-            generalOffset += offset
+            generalOffset += pan
+
+            val deltaOffset = Offset(
+                x = abs(initialOffset.x - generalOffset.x),
+                y = abs(initialOffset.y - generalOffset.y)
+            )
 
             if (
-                !(abs(initialOffset.x - generalOffset.x) < offsetThreshold &&
-                abs(initialOffset.y - generalOffset.y) < offsetThreshold)
+                deltaOffset.x > offsetThreshold || deltaOffset.y > offsetThreshold
             ) {
                 if (!lineCreated) {
+                    log(zoomState.value.offset)
                     lineList.add(
                         Line(
-                            mutableStateOf((initialOffset) / screenImageScale - imageOffset/screenImageScale),
-                            mutableStateOf((generalOffset) / screenImageScale - imageOffset/screenImageScale),
+                            mutableStateOf(zoomState.value.offset + initialOffset),
+                            mutableStateOf(zoomState.value.offset + initialOffset),
 
                             customCoefficient = globalLine.value?.customCoefficient,
                             customSize = globalLine.value?.customSize,
@@ -183,12 +191,27 @@ fun MainScreen() {
                 } else {
                     val line = lineList.last()
 
-                    line.end.value += offset / screenImageScale
+                    line.end.value += pan * zoomState.value.scale
                 }
             }
         } else {
-            screenImageScale *= zoom
-            imageOffset += offset
+            val centroid = event.calculateCentroid()
+
+            val newScale = zoom * zoomState.value.scale
+            val newOffset = Offset(
+                zoomState.value.offset.x + -pan.x * newScale + (newScale - zoomState.value.scale) * centroid.x,
+                zoomState.value.offset.y + -pan.y * newScale + (newScale - zoomState.value.scale) * centroid.y,
+            )
+            if (newOffset != Offset.Unspecified) {
+                val newZoom = zoomState.value.copy(
+                    scale = newScale,
+                    offset = newOffset
+                )
+                zoomState.value = newZoom
+            }
+
+//            screenImageScale *= zoom
+//            imageOffset += pan
         }
     }
 
@@ -226,150 +249,76 @@ fun MainScreen() {
         ArrowMagnifier(focusPoint, screenImageScale, imageOffset)
 
         bitmap?.let { bt ->
-            Box(
-                Modifier
-//                    .fillMaxSize()
-//                    .pointerInput(Unit) {
-//                        awaitEachGesture {
-//                            // Wait for the first down event (gesture starts)
-//                            val firstDown = awaitFirstDown(requireUnconsumed = false)
-//
-//                            val position = firstDown.position
-//                            var offset = Offset.Zero + position
-//
-//                            do {
-//                                val event = awaitPointerEvent()
-//                                val fingersCount = event.changes.count()
-//                                val canceled = event.changes.fastAny { it.isConsumed }
-//
-//                                if (!canceled) {
-//                                    val zoom = event.calculateZoom()
-//                                    val pan = event.calculatePan()
-//
-//
-//                                    if (!isDragging) {
-//                                        isDragging = true
-//                                        offset += pan
-//                                        onDragStart(offset)
-//                                    } else {
-//                                        onDrag(
-//                                            pan,
-//                                            zoom,
-//                                            fingersCount
-//                                        )
-//                                    }
-//
-//                                    event.changes.fastForEach {
-//                                        if (it.positionChanged()) {
-//                                            it.consume()
-//                                        }
-//                                    }
-//                                }
-//
-//                                if (canceled || event.changes.fastAll { !it.pressed }) {
-//                                    isDragging = false // Drag ended
-//                                    onDragEnd()
-//                                }
-//                            } while (isDragging)
-//                        }
-//                    }
-            ) {
-                Image(
-                    modifier = Modifier
-                        .wrapContentSize(unbounded = true, align = Alignment.TopStart)
-                        .graphicsLayer(
-                            scaleX = immutableZoomState.scale,
-                            scaleY = immutableZoomState.scale,
-                            translationX = -immutableZoomState.offset.x,
-                            translationY = -immutableZoomState.offset.y,
-                            transformOrigin = TransformOrigin(0f, 0f)
-                        )
-                        .pointerInput(Unit) {
+            Image(
+                modifier = Modifier
+                    .wrapContentSize(unbounded = true, align = Alignment.TopStart)
+                    .graphicsLayer(
+                        scaleX = immutableZoomState.scale,
+                        scaleY = immutableZoomState.scale,
+                        translationX = -immutableZoomState.offset.x,
+                        translationY = -immutableZoomState.offset.y,
+                        transformOrigin = TransformOrigin(0f, 0f)
+                    )
+                    .pointerInput(Unit) {
 
-                            awaitEachGesture {
-                                // Wait for the first down event (gesture starts)
-                                val firstDown = awaitFirstDown(requireUnconsumed = false)
+                        awaitEachGesture {
+                            // Wait for the first down event (gesture starts)
+                            val firstDown = awaitFirstDown(requireUnconsumed = false)
 
-                                val position = firstDown.position
-                                var offset = Offset.Zero + position
+                            val position = firstDown.position
+                            var offset = Offset.Zero + position
 
-                                do {
-                                    val event = awaitPointerEvent()
-                                    val fingersCount = event.changes.count()
-                                    val canceled = event.changes.fastAny { it.isConsumed }
+                            do {
+                                val event = awaitPointerEvent()
+                                val fingersCount = event.changes.count()
+                                val canceled = event.changes.fastAny { it.isConsumed }
 
-                                    if (!canceled) {
-                                        val zoom = event.calculateZoom()
-                                        val pan = event.calculatePan()
-                                        val centroid = event.calculateCentroid()
-
-                                        val newScale = zoom * zoomState.value.scale
-                                        val newOffset = Offset(
-                                            zoomState.value.offset.x + -pan.x * newScale + (newScale - zoomState.value.scale) * centroid.x,
-                                            zoomState.value.offset.y + -pan.y * newScale + (newScale - zoomState.value.scale) * centroid.y,
+                                if (!canceled) {
+                                    if (!isDragging) {
+                                        isDragging = true
+                                        offset += event.calculatePan()
+                                        onDragStart(offset)
+                                    } else {
+                                        onDrag(
+                                            event,
+                                            fingersCount
                                         )
-                                        if (newOffset != Offset.Unspecified) {
-                                            val newZoom = zoomState.value.copy(
-                                                scale = newScale,
-                                                offset = newOffset
-                                            )
-                                            zoomState.value = newZoom
-                                        }
-
-                                        if (!isDragging) {
-                                            isDragging = true
-                                            offset += pan
-                                            onDragStart(offset)
-                                        } else {
-                                            onDrag(
-                                                pan,
-                                                zoom,
-                                                fingersCount
-                                            )
-                                        }
-
-                                        event.changes.fastForEach {
-                                            if (it.positionChanged()) {
-                                                it.consume()
-                                            }
-                                        }
                                     }
 
-                                    if (canceled || event.changes.fastAll { !it.pressed }) {
-                                        isDragging = false // Drag ended
-                                        onDragEnd()
+                                    event.changes.fastForEach {
+                                        if (it.positionChanged()) {
+                                            it.consume()
+                                        }
                                     }
-                                } while (isDragging)
-                            }
-                        }
-                        .then(
-                            if (immutableZoomState.childRect == null) {
-                                Modifier.onGloballyPositioned { layoutCoordinates ->
-                                    val positionInParent = layoutCoordinates.positionInParent()
-                                    val childRect = Rect(
-                                        positionInParent.x,
-                                        positionInParent.y,
-                                        positionInParent.x + layoutCoordinates.size.width,
-                                        positionInParent.y + layoutCoordinates.size.height
-                                    )
-                                    zoomState.value = immutableZoomState.copy(
-                                        childRect = childRect
-                                    )
                                 }
-                            } else Modifier
-                        ),
-//                        .graphicsLayer {
-//                            transformOrigin = TransformOrigin(0f, 0f)
-//                            scaleX *= imageScale * screenImageScale
-//                            scaleY *= imageScale * screenImageScale
-//                            translationX = imageOffset.x
-//                            translationY = imageOffset.y
-//                        },
-                    bitmap = bt.asImageBitmap(),
-                    contentScale = ContentScale.None,
-                    contentDescription = "image",
-                )
-            }
+
+                                if (canceled || event.changes.fastAll { !it.pressed }) {
+                                    isDragging = false // Drag ended
+                                    onDragEnd()
+                                }
+                            } while (isDragging)
+                        }
+                    }
+                    .then(
+                        if (immutableZoomState.childRect == null) {
+                            Modifier.onGloballyPositioned { layoutCoordinates ->
+                                val positionInParent = layoutCoordinates.positionInParent()
+                                val childRect = Rect(
+                                    positionInParent.x,
+                                    positionInParent.y,
+                                    positionInParent.x + layoutCoordinates.size.width,
+                                    positionInParent.y + layoutCoordinates.size.height
+                                )
+                                zoomState.value = immutableZoomState.copy(
+                                    childRect = childRect
+                                )
+                            }
+                        } else Modifier
+                    ),
+                bitmap = bt.asImageBitmap(),
+                contentScale = ContentScale.None,
+                contentDescription = "image",
+            )
         }
 
         Canvas(
@@ -377,7 +326,7 @@ fun MainScreen() {
                 .fillMaxSize()
         ) {
             for (line in lineList) {
-                val lineCopy = line.attachedCopy(screenImageScale, imageOffset)
+                val lineCopy = line.attachedCopy(screenImageScale, zoomState.value.offset)
 
                 drawArrow(
                     lineCopy
@@ -386,7 +335,7 @@ fun MainScreen() {
         }
 
         for (line in lineList) {
-            val lineCopy = line.attachedCopy(screenImageScale, imageOffset)
+            val lineCopy = line.attachedCopy(screenImageScale, zoomState.value.offset)
 
             AttachToArrow(
                 lineCopy,
