@@ -1,10 +1,8 @@
 package com.oltrysifp.arrowdrawer
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
-import android.util.Half.toFloat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -13,23 +11,14 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.forEachGesture
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Scaffold
@@ -44,41 +33,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.paint
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
+import com.oltrysifp.arrowdrawer.bitmap.loadBitmapFromUri
+import com.oltrysifp.arrowdrawer.composable.ArrowMagnifier
 import com.oltrysifp.arrowdrawer.composable.AttachToArrow
-import com.oltrysifp.arrowdrawer.composable.onArrow.CentralContent
 import com.oltrysifp.arrowdrawer.composable.inputs.BottomControls
 import com.oltrysifp.arrowdrawer.composable.inputs.EditMenu
-import com.oltrysifp.arrowdrawer.draw.drawArrow
-import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
-import com.oltrysifp.arrowdrawer.bitmap.loadBitmapFromUri
-import com.oltrysifp.arrowdrawer.bitmap.saveImage
-import com.oltrysifp.arrowdrawer.composable.ArrowMagnifier
+import com.oltrysifp.arrowdrawer.composable.onArrow.CentralContent
 import com.oltrysifp.arrowdrawer.composable.onArrow.EndContent
 import com.oltrysifp.arrowdrawer.composable.onArrow.StartContent
 import com.oltrysifp.arrowdrawer.draw.drawAllAndExport
+import com.oltrysifp.arrowdrawer.draw.drawArrow
+import com.oltrysifp.arrowdrawer.models.Line
+import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
 import com.oltrysifp.arrowdrawer.util.log
-import nl.birdly.zoombox.zoomable
+import nl.birdly.zoombox.rememberMutableZoomState
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
@@ -103,9 +85,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    ZoomableImage()
-
-    return
+    val zoomState = rememberMutableZoomState()
+    val immutableZoomState = zoomState.value
 
     val mContext = LocalContext.current
     val displayMetrics = mContext.resources.displayMetrics
@@ -247,62 +228,143 @@ fun MainScreen() {
         bitmap?.let { bt ->
             Box(
                 Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) {
-                        awaitEachGesture {
-                            // Wait for the first down event (gesture starts)
-                            val firstDown = awaitFirstDown(requireUnconsumed = false)
-
-                            val position = firstDown.position
-                            var offset = Offset.Zero + position
-
-                            do {
-                                val event = awaitPointerEvent()
-                                val fingersCount = event.changes.count()
-                                val canceled = event.changes.fastAny { it.isConsumed }
-
-                                if (!canceled) {
-                                    val zoom = event.calculateZoom()
-                                    val pan = event.calculatePan()
-
-
-                                    if (!isDragging) {
-                                        isDragging = true
-                                        offset += pan
-                                        onDragStart(offset)
-                                    } else {
-                                        onDrag(
-                                            pan,
-                                            zoom,
-                                            fingersCount
-                                        )
-                                    }
-
-                                    event.changes.fastForEach {
-                                        if (it.positionChanged()) {
-                                            it.consume()
-                                        }
-                                    }
-                                }
-
-                                if (canceled || event.changes.fastAll { !it.pressed }) {
-                                    isDragging = false // Drag ended
-                                    onDragEnd()
-                                }
-                            } while (isDragging)
-                        }
-                    }
+//                    .fillMaxSize()
+//                    .pointerInput(Unit) {
+//                        awaitEachGesture {
+//                            // Wait for the first down event (gesture starts)
+//                            val firstDown = awaitFirstDown(requireUnconsumed = false)
+//
+//                            val position = firstDown.position
+//                            var offset = Offset.Zero + position
+//
+//                            do {
+//                                val event = awaitPointerEvent()
+//                                val fingersCount = event.changes.count()
+//                                val canceled = event.changes.fastAny { it.isConsumed }
+//
+//                                if (!canceled) {
+//                                    val zoom = event.calculateZoom()
+//                                    val pan = event.calculatePan()
+//
+//
+//                                    if (!isDragging) {
+//                                        isDragging = true
+//                                        offset += pan
+//                                        onDragStart(offset)
+//                                    } else {
+//                                        onDrag(
+//                                            pan,
+//                                            zoom,
+//                                            fingersCount
+//                                        )
+//                                    }
+//
+//                                    event.changes.fastForEach {
+//                                        if (it.positionChanged()) {
+//                                            it.consume()
+//                                        }
+//                                    }
+//                                }
+//
+//                                if (canceled || event.changes.fastAll { !it.pressed }) {
+//                                    isDragging = false // Drag ended
+//                                    onDragEnd()
+//                                }
+//                            } while (isDragging)
+//                        }
+//                    }
             ) {
                 Image(
                     modifier = Modifier
                         .wrapContentSize(unbounded = true, align = Alignment.TopStart)
-                        .graphicsLayer {
+                        .graphicsLayer(
+                            scaleX = immutableZoomState.scale,
+                            scaleY = immutableZoomState.scale,
+                            translationX = -immutableZoomState.offset.x,
+                            translationY = -immutableZoomState.offset.y,
                             transformOrigin = TransformOrigin(0f, 0f)
-                            scaleX *= imageScale * screenImageScale
-                            scaleY *= imageScale * screenImageScale
-                            translationX = imageOffset.x
-                            translationY = imageOffset.y
-                        },
+                        )
+                        .pointerInput(Unit) {
+
+                            awaitEachGesture {
+                                // Wait for the first down event (gesture starts)
+                                val firstDown = awaitFirstDown(requireUnconsumed = false)
+
+                                val position = firstDown.position
+                                var offset = Offset.Zero + position
+
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val fingersCount = event.changes.count()
+                                    val canceled = event.changes.fastAny { it.isConsumed }
+
+                                    if (!canceled) {
+                                        val zoom = event.calculateZoom()
+                                        val pan = event.calculatePan()
+                                        val centroid = event.calculateCentroid()
+
+                                        val newScale = zoom * zoomState.value.scale
+                                        val newOffset = Offset(
+                                            zoomState.value.offset.x + -pan.x * newScale + (newScale - zoomState.value.scale) * centroid.x,
+                                            zoomState.value.offset.y + -pan.y * newScale + (newScale - zoomState.value.scale) * centroid.y,
+                                        )
+                                        if (newOffset != Offset.Unspecified) {
+                                            val newZoom = zoomState.value.copy(
+                                                scale = newScale,
+                                                offset = newOffset
+                                            )
+                                            zoomState.value = newZoom
+                                        }
+
+                                        if (!isDragging) {
+                                            isDragging = true
+                                            offset += pan
+                                            onDragStart(offset)
+                                        } else {
+                                            onDrag(
+                                                pan,
+                                                zoom,
+                                                fingersCount
+                                            )
+                                        }
+
+                                        event.changes.fastForEach {
+                                            if (it.positionChanged()) {
+                                                it.consume()
+                                            }
+                                        }
+                                    }
+
+                                    if (canceled || event.changes.fastAll { !it.pressed }) {
+                                        isDragging = false // Drag ended
+                                        onDragEnd()
+                                    }
+                                } while (isDragging)
+                            }
+                        }
+                        .then(
+                            if (immutableZoomState.childRect == null) {
+                                Modifier.onGloballyPositioned { layoutCoordinates ->
+                                    val positionInParent = layoutCoordinates.positionInParent()
+                                    val childRect = Rect(
+                                        positionInParent.x,
+                                        positionInParent.y,
+                                        positionInParent.x + layoutCoordinates.size.width,
+                                        positionInParent.y + layoutCoordinates.size.height
+                                    )
+                                    zoomState.value = immutableZoomState.copy(
+                                        childRect = childRect
+                                    )
+                                }
+                            } else Modifier
+                        ),
+//                        .graphicsLayer {
+//                            transformOrigin = TransformOrigin(0f, 0f)
+//                            scaleX *= imageScale * screenImageScale
+//                            scaleY *= imageScale * screenImageScale
+//                            translationX = imageOffset.x
+//                            translationY = imageOffset.y
+//                        },
                     bitmap = bt.asImageBitmap(),
                     contentScale = ContentScale.None,
                     contentDescription = "image",
@@ -389,16 +451,4 @@ fun MainScreen() {
             )
         }
     }
-}
-
-@Composable
-fun ZoomableImage() {
-    Image(
-        painter = painterResource(R.drawable.ic_launcher_background),
-        modifier = Modifier
-            .fillMaxSize()
-            .zoomable(),
-        contentScale = ContentScale.Crop,
-        contentDescription = null
-    )
 }

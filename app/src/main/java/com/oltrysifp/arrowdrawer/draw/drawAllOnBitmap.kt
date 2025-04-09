@@ -2,10 +2,9 @@ package com.oltrysifp.arrowdrawer.draw
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.bitmap.saveImage
+import com.oltrysifp.arrowdrawer.models.Line
 
 fun drawAllOnBitmap(
     bitmap: Bitmap,

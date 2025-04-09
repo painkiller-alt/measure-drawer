@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
-import com.oltrysifp.arrowdrawer.R
 import java.io.File
 import java.io.File.separator
 import java.io.FileOutputStream

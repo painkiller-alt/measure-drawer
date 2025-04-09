@@ -1,6 +1,5 @@
 package com.oltrysifp.arrowdrawer.models
 
-import android.util.Half.toFloat
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset

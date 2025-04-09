@@ -12,7 +12,6 @@ import androidx.compose.ui.geometry.Rect
 
 @Stable
 class MutableZoomState(initial: ZoomState) {
-
     var value: ZoomState by mutableStateOf(initial, structuralEqualityPolicy())
 }
 
