@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,6 +26,7 @@ import com.oltrysifp.arrowdrawer.Palette
 import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.models.Line
+import com.oltrysifp.arrowdrawer.ui.theme.OnBackground
 
 @Composable
 fun BottomControls(
@@ -95,7 +97,7 @@ fun BottomControls(
                         Icon(
                             painterResource(R.drawable.download),
                             "download",
-                            tint = Palette.theme.onBackground
+                            tint = MaterialTheme.colorScheme.OnBackground
                         )
                     }
                 }

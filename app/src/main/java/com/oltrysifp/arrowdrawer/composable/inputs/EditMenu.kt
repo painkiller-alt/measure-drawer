@@ -23,6 +23,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +44,11 @@ import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.composable.VSpacer
 import com.oltrysifp.arrowdrawer.models.Line
+import com.oltrysifp.arrowdrawer.ui.theme.OnPrimary
+import com.oltrysifp.arrowdrawer.ui.theme.OnSurfaceText
+import com.oltrysifp.arrowdrawer.ui.theme.Primary
+import com.oltrysifp.arrowdrawer.ui.theme.Red
+import com.oltrysifp.arrowdrawer.ui.theme.Surface
 
 @Composable
 fun EditMenu(
@@ -106,7 +112,7 @@ fun EditMenu(
         Card(
             shape = RoundedCornerShape(14.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Palette.theme.surface
+                containerColor = MaterialTheme.colorScheme.Surface
             ),
             modifier = Modifier.height(450.dp)
         ) {
@@ -169,7 +175,7 @@ fun EditMenu(
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = Palette.buttonColors(
-                                    container = Palette.theme.primary
+                                    container = MaterialTheme.colorScheme.Primary
                                 )
                             ) {
                                 Row(
@@ -197,13 +203,13 @@ fun EditMenu(
                                         }
                                     },
                                     colors = CheckboxDefaults.colors(
-                                        checkedColor = Palette.theme.primary
+                                        checkedColor = MaterialTheme.colorScheme.Primary
                                     )
                                 )
 
                                 Text(
                                     "Свой размер",
-                                    color = Palette.theme.onSurfaceText
+                                    color = MaterialTheme.colorScheme.OnSurfaceText
                                 )
                             }
 
@@ -225,13 +231,13 @@ fun EditMenu(
                                             }
                                         },
                                         colors = CheckboxDefaults.colors(
-                                            checkedColor = Palette.theme.primary
+                                            checkedColor = MaterialTheme.colorScheme.Primary
                                         )
                                     )
 
                                     Text(
                                         "Динамический размер",
-                                        color = Palette.theme.onSurfaceText
+                                        color = MaterialTheme.colorScheme.OnSurfaceText
                                     )
                                 }
                             }
@@ -245,7 +251,7 @@ fun EditMenu(
                             onClick = onDelete,
                             modifier = Modifier.fillMaxWidth(),
                             colors = Palette.buttonColors(
-                                container = Palette.theme.red
+                                container = MaterialTheme.colorScheme.Red
                             )
                         ) {
                             Row(
@@ -254,7 +260,7 @@ fun EditMenu(
                                 Icon(
                                     painterResource(R.drawable.trash),
                                     "delete",
-                                    tint = Palette.theme.onPrimary,
+                                    tint = MaterialTheme.colorScheme.OnPrimary,
                                     modifier = Modifier.size(20.dp)
                                 )
 
@@ -291,7 +297,7 @@ fun InheritWarning(
                 onClick = onDecline,
                 modifier = Modifier.fillMaxWidth(0.48f),
                 colors = Palette.buttonColors(
-                    container = Palette.theme.red
+                    container = MaterialTheme.colorScheme.Red
                 )
             ) {
                 Text("Отмена")
@@ -301,7 +307,7 @@ fun InheritWarning(
                 onClick = onAccept,
                 modifier = Modifier.fillMaxWidth(0.96f),
                 colors = Palette.buttonColors(
-                    container = Palette.theme.primary
+                    container = MaterialTheme.colorScheme.Primary
                 )
             ) {
                 Text("Наследовать")
@@ -335,8 +341,8 @@ fun ColorPicker(
                         .size(42.dp)
                         .clip(CircleShape)
                         .border(
-                            if (color.value == it) BorderStroke(width = 2.dp, color = Palette.theme.onSurfaceText)
-                            else BorderStroke(width = 0.dp, color = Palette.theme.surface),
+                            if (color.value == it) BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.OnSurfaceText)
+                            else BorderStroke(width = 0.dp, color = MaterialTheme.colorScheme.Surface),
                             shape = CircleShape
                         )
                 )

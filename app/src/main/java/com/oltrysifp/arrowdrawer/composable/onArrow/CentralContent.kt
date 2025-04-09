@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,6 +20,8 @@ import androidx.compose.ui.unit.sp
 import com.oltrysifp.arrowdrawer.Palette
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineBoxProperties
+import com.oltrysifp.arrowdrawer.ui.theme.OnImage
+import com.oltrysifp.arrowdrawer.ui.theme.OnLine
 
 @Composable
 fun CentralContent(
@@ -47,7 +50,7 @@ fun CentralContent(
     ) {
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = Palette.theme.onLine
+                containerColor = MaterialTheme.colorScheme.OnLine
             ),
             shape = RoundedCornerShape(6.dp),
             modifier = Modifier
@@ -69,7 +72,7 @@ fun CentralContent(
             Text(
                 "$showLength",
                 fontSize = 14.sp,
-                color = Palette.theme.onImage,
+                color = MaterialTheme.colorScheme.OnImage,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
         }
