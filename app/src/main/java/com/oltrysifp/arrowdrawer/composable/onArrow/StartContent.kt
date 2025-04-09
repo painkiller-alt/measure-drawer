@@ -13,13 +13,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.oltrysifp.arrowdrawer.Palette
 import com.oltrysifp.arrowdrawer.models.Line
+import nl.birdly.zoombox.ZoomState
 
 @Composable
 fun StartContent(
     focusedLine: Line?,
     line: Line,
     focusPoint: MutableState<MutableState<Offset>?>,
-    screenImageScale: Float
+    zoomState: ZoomState
 ) {
     if (focusedLine == line) {
         Surface(
@@ -35,7 +36,7 @@ fun StartContent(
                             focusPoint.value = line.start
                         },
                         onDrag = { _, dragAmount ->
-                            line.start.value += dragAmount/screenImageScale
+                            line.start.value += dragAmount / zoomState.scale
                         },
                         onDragEnd = {
                             focusPoint.value = null

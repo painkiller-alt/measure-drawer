@@ -29,14 +29,12 @@ import com.oltrysifp.arrowdrawer.models.Line
 @Composable
 fun BottomControls(
     isLoaded: Boolean,
-    isDrawMode: Boolean,
 
     focusedLine: Line?,
 
     onEdit: () -> Unit,
     onLoad: () -> Unit,
     onExport: () -> Unit,
-    onModeSwitch: (Boolean) -> Unit
 ) {
     var isExported by remember { mutableStateOf(false) }
 
@@ -97,32 +95,6 @@ fun BottomControls(
                         Icon(
                             painterResource(R.drawable.download),
                             "download",
-                            tint = Palette.theme.onBackground
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { onModeSwitch(false) },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = if (isDrawMode) Color.Transparent else Palette.theme.secondary
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.drag),
-                            "drag_mode",
-                            tint = Palette.theme.onBackground
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { onModeSwitch(true) },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = if (!isDrawMode) Color.Transparent else Palette.theme.secondary
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.edit),
-                            "draw_mode",
                             tint = Palette.theme.onBackground
                         )
                     }

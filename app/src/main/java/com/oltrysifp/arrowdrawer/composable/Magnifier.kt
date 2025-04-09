@@ -8,29 +8,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import nl.birdly.zoombox.ZoomState
 
 @Composable
 fun ArrowMagnifier(
     focusPoint: MutableState<MutableState<Offset>?>,
-    screenImageScale: Float,
-    imageOffset: Offset
+    zoomState: ZoomState
 ) {
     focusPoint.value?.let { focus ->
         Box(
             modifier = Modifier
                 .magnifier(
-                    sourceCenter = {
-                        Offset(
-                            focus.value.x,
-                            focus.value.y
-                        ) * screenImageScale + imageOffset
-                    },
-                    magnifierCenter = {
-                        Offset(
-                            x=0f,
-                            y=0f
-                        )
-                    },
+                    sourceCenter = { focus.value * zoomState.scale - zoomState.offset },
+                    magnifierCenter = { Offset.Zero },
                     zoom = 2f,
                     size = DpSize(
                         width = 120.dp,

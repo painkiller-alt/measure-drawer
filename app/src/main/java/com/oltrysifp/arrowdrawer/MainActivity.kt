@@ -92,17 +92,13 @@ fun MainScreen() {
     val mContext = LocalContext.current
     val displayMetrics = mContext.resources.displayMetrics
     val screenWidth = displayMetrics.widthPixels
-    val screenHeight = displayMetrics.heightPixels
 
     var imageUri: Uri? by remember { mutableStateOf(null) }
     var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
     var loaded by remember { mutableStateOf(false) }
 
-    var imageOffset by remember { mutableStateOf(Offset.Zero) }
     var imageScale by remember { mutableFloatStateOf(1f) }
-    var screenImageScale by remember { mutableFloatStateOf(1f) }
 
-    var isDrawMode by remember { mutableStateOf(true) }
     var isDragging by remember { mutableStateOf(false) }
 
     val offsetThreshold = 50f
@@ -150,10 +146,8 @@ fun MainScreen() {
     }
 
     val onDragStart = { offset: Offset ->
-        if (isDrawMode) {
-            initialOffset = offset
-            generalOffset = offset
-        }
+        initialOffset = offset
+        generalOffset = offset
     }
 
     val onDrag = { event: PointerEvent, fingersCount: Int ->
@@ -172,11 +166,10 @@ fun MainScreen() {
                 deltaOffset.x > offsetThreshold || deltaOffset.y > offsetThreshold
             ) {
                 if (!lineCreated) {
-                    log(zoomState.value.offset)
                     lineList.add(
                         Line(
-                            mutableStateOf(zoomState.value.offset + initialOffset),
-                            mutableStateOf(zoomState.value.offset + initialOffset),
+                            mutableStateOf(initialOffset),
+                            mutableStateOf(initialOffset),
 
                             customCoefficient = globalLine.value?.customCoefficient,
                             customSize = globalLine.value?.customSize,
@@ -191,7 +184,7 @@ fun MainScreen() {
                 } else {
                     val line = lineList.last()
 
-                    line.end.value += pan * zoomState.value.scale
+                    line.end.value += pan
                 }
             }
         } else {
@@ -209,15 +202,14 @@ fun MainScreen() {
                 )
                 zoomState.value = newZoom
             }
-
-//            screenImageScale *= zoom
-//            imageOffset += pan
         }
     }
 
     val onDragEnd = {
         focusPoint.value = null
         lineCreated = false
+        initialOffset = Offset.Zero
+        generalOffset = Offset.Zero
     }
 
     Box(
@@ -246,7 +238,7 @@ fun MainScreen() {
                 )
             }
         }
-        ArrowMagnifier(focusPoint, screenImageScale, imageOffset)
+        ArrowMagnifier(focusPoint, zoomState.value)
 
         bitmap?.let { bt ->
             Image(
@@ -260,7 +252,6 @@ fun MainScreen() {
                         transformOrigin = TransformOrigin(0f, 0f)
                     )
                     .pointerInput(Unit) {
-
                         awaitEachGesture {
                             // Wait for the first down event (gesture starts)
                             val firstDown = awaitFirstDown(requireUnconsumed = false)
@@ -276,8 +267,10 @@ fun MainScreen() {
                                 if (!canceled) {
                                     if (!isDragging) {
                                         isDragging = true
-                                        offset += event.calculatePan()
-                                        onDragStart(offset)
+                                        if (fingersCount < 2) {
+                                            offset += event.calculatePan()
+                                            onDragStart(offset)
+                                        }
                                     } else {
                                         onDrag(
                                             event,
@@ -326,7 +319,7 @@ fun MainScreen() {
                 .fillMaxSize()
         ) {
             for (line in lineList) {
-                val lineCopy = line.attachedCopy(screenImageScale, zoomState.value.offset)
+                val lineCopy = line.attachedCopy(zoomState.value.scale, -zoomState.value.offset)
 
                 drawArrow(
                     lineCopy
@@ -335,7 +328,7 @@ fun MainScreen() {
         }
 
         for (line in lineList) {
-            val lineCopy = line.attachedCopy(screenImageScale, zoomState.value.offset)
+            val lineCopy = line.attachedCopy(zoomState.value.scale, -zoomState.value.offset)
 
             AttachToArrow(
                 lineCopy,
@@ -344,7 +337,7 @@ fun MainScreen() {
                         focusedLine,
                         line,
                         focusPoint,
-                        screenImageScale
+                        zoomState.value
                     )
                 },
                 endContent = {
@@ -352,14 +345,14 @@ fun MainScreen() {
                         focusedLine,
                         line,
                         focusPoint,
-                        screenImageScale
+                        zoomState.value
                     )
                 },
                 centerContent = { properties ->
                     CentralContent(
                         properties,
                         line,
-                        screenImageScale,
+                        zoomState.value.scale,
                         onFocus = {
                             focusedLine = line
                         }
@@ -376,7 +369,6 @@ fun MainScreen() {
         ) {
             BottomControls(
                 loaded,
-                isDrawMode,
                 focusedLine,
 
                 onEdit = {
@@ -393,9 +385,6 @@ fun MainScreen() {
 
                         saveContext
                     )
-                },
-                onModeSwitch = { isDraw ->
-                    isDrawMode = isDraw
                 }
             )
         }
