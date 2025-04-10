@@ -337,7 +337,7 @@ fun MainScreen() {
                         focusedLine,
                         line,
                         focusPoint,
-                        zoomState.value
+                        zoomState.value.scale
                     )
                 },
                 endContent = {
@@ -345,7 +345,7 @@ fun MainScreen() {
                         focusedLine,
                         line,
                         focusPoint,
-                        zoomState.value
+                        zoomState.value.scale
                     )
                 },
                 centerContent = { properties ->
