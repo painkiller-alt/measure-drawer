@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,6 +43,8 @@ import com.oltrysifp.arrowdrawer.Palette
 import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.composable.VSpacer
+import com.oltrysifp.arrowdrawer.composable.arrowSettings.ColorPicker
+import com.oltrysifp.arrowdrawer.composable.arrowSettings.ThicknessPicker
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.palette
 
@@ -63,6 +66,7 @@ fun EditMenu(
     var isCustomSize by remember { mutableStateOf(line.customSize != null) }
 
     val color = remember { mutableStateOf(line.color) }
+    val thickness = remember { mutableFloatStateOf(line.thickness) }
 
     fun getNewLine(): Line {
         val newLine = line.copy()
@@ -78,6 +82,7 @@ fun EditMenu(
         }
 
         newLine.color = color.value
+        newLine.thickness = thickness.floatValue
 
         val cu = customUnit.value
         if (cu != "") {
@@ -207,6 +212,10 @@ fun EditMenu(
 
                     VSpacer(4.dp)
 
+                    ThicknessPicker(thickness)
+
+                    VSpacer(4.dp)
+
                     DefaultButton(
                         onClick = {
                             onInherit()
@@ -250,49 +259,6 @@ fun EditMenu(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun ColorPicker(
-    color: MutableState<Color>
-) {
-    val colors = listOf(
-        Color.Red,
-        Color.Green,
-        Color.Blue,
-        Color.White,
-        Color.Black
-    )
-
-    Row(
-        horizontalArrangement = Arrangement.SpaceAround,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        colors.forEach {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .border(
-                            if (color.value == it) BorderStroke(width = 2.dp, color = palette.onSurfaceText)
-                            else BorderStroke(width = 0.dp, color = palette.surface),
-                            shape = CircleShape
-                        )
-                )
-
-                Box(
-                    Modifier
-                        .clip(CircleShape)
-                        .clickable { color.value = it }
-                        .size(30.dp)
-                        .background(it)
-                )
             }
         }
     }

@@ -146,14 +146,6 @@ fun MainScreen() {
         }
     }
 
-    LaunchedEffect(canvasSettings.value) {
-        for (line in lineList) {
-            line.customCoefficient = canvasSettings.value.customCoefficient
-            line.customSize = canvasSettings.value.customSize
-            line.customUnit = canvasSettings.value.customUnit
-        }
-    }
-
     val onDragStart = { offset: Offset ->
         initialOffset = offset
         generalOffset = offset
@@ -184,7 +176,8 @@ fun MainScreen() {
                             customSize = canvasSettings.value.customSize,
                             customUnit = canvasSettings.value.customUnit,
 
-                            color = canvasSettings.value.color
+                            color = canvasSettings.value.color,
+                            thickness = canvasSettings.value.thickness
                         )
                     )
 
@@ -233,9 +226,7 @@ fun MainScreen() {
                     it,
                     onExit = { newLine ->
                         editOpened = false
-
-                        lineList[lineList.indexOf(focusedLine)] = newLine
-                        focusedLine = newLine
+                        it.mutate(newLine)
                     },
                     onDelete = {
                         editOpened = false

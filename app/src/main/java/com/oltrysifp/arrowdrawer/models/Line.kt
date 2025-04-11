@@ -16,14 +16,18 @@ class Line(
     thickness: Float = 5f,
     color: Color = Color.Green,
 
-    var customCoefficient: Float? = null,
-    var customSize: Int? = null,
-    var customUnit: String? = null
+    customCoefficient: Float? = null,
+    customSize: Int? = null,
+    customUnit: String? = null
 ) {
     var start by mutableStateOf(start)
     var end by mutableStateOf(end)
     var thickness by mutableFloatStateOf(thickness)
     var color by mutableStateOf(color)
+
+    var customCoefficient by mutableStateOf(customCoefficient)
+    var customSize by mutableStateOf(customSize)
+    var customUnit by mutableStateOf(customUnit)
 
     fun copy(
         start: Offset = this.start,
@@ -43,6 +47,15 @@ class Line(
             customSize,
             customUnit
         )
+    }
+
+    fun mutate(
+        line: Line
+    ) {
+        this.start = line.start
+        this.end = line.end
+        this.color = line.color
+        this.thickness = line.thickness
     }
 
     fun attachedCopy(
