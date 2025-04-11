@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import nl.birdly.zoombox.ZoomState
+import com.oltrysifp.arrowdrawer.composable.zoom.ZoomState
 
 @Composable
 fun ArrowMagnifier(

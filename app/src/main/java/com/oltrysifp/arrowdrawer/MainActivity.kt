@@ -51,17 +51,21 @@ import androidx.compose.ui.util.fastForEach
 import com.oltrysifp.arrowdrawer.bitmap.loadBitmapFromUri
 import com.oltrysifp.arrowdrawer.composable.ArrowMagnifier
 import com.oltrysifp.arrowdrawer.composable.AttachToArrow
+import com.oltrysifp.arrowdrawer.composable.EdgeToEdgeConfig
 import com.oltrysifp.arrowdrawer.composable.inputs.BottomControls
+import com.oltrysifp.arrowdrawer.composable.inputs.CanvasSettings
 import com.oltrysifp.arrowdrawer.composable.inputs.EditMenu
+import com.oltrysifp.arrowdrawer.composable.inputs.SureToInherit
 import com.oltrysifp.arrowdrawer.composable.onArrow.CentralContent
 import com.oltrysifp.arrowdrawer.composable.onArrow.EndContent
 import com.oltrysifp.arrowdrawer.composable.onArrow.StartContent
+import com.oltrysifp.arrowdrawer.composable.zoom.rememberMutableZoomState
 import com.oltrysifp.arrowdrawer.draw.drawAllAndExport
 import com.oltrysifp.arrowdrawer.draw.drawArrow
 import com.oltrysifp.arrowdrawer.models.Line
+import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
 import com.oltrysifp.arrowdrawer.util.log
-import nl.birdly.zoombox.rememberMutableZoomState
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
@@ -69,6 +73,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            EdgeToEdgeConfig(this)
             ArrowDrawerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(
@@ -107,13 +112,16 @@ fun MainScreen() {
     var lineCreated by remember { mutableStateOf(false) }
 
     val globalLine = remember { mutableStateOf<Line?>(null) }
+    val canvasSettings = remember { mutableStateOf(LineSettings()) }
 
     val lineList = remember {
         mutableStateListOf<Line>()
     }
     val focusPoint = remember { mutableStateOf<MutableState<Offset>?>(null) }
     var focusedLine by remember { mutableStateOf<Line?>(null) }
+
     var editOpened by remember { mutableStateOf(false) }
+    var settingsOpened by remember { mutableStateOf(false) }
 
     val pickMedia = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -121,6 +129,9 @@ fun MainScreen() {
             imageUri = uri
         }
     }
+
+    var inheritMode by remember { mutableStateOf(false) }
+    var inheritPicker: Line? by remember { mutableStateOf(null) }
 
     LaunchedEffect(imageUri) {
         imageUri?.let {
@@ -135,13 +146,11 @@ fun MainScreen() {
         }
     }
 
-    LaunchedEffect(globalLine.value) {
-        globalLine.value?.let {
-            for (line in lineList) {
-                line.customCoefficient = it.customCoefficient
-                line.customSize = it.customSize
-                line.customUnit = it.customUnit
-            }
+    LaunchedEffect(canvasSettings.value.toString()) {
+        for (line in lineList) {
+            line.customCoefficient = canvasSettings.value.customCoefficient
+            line.customSize = canvasSettings.value.customSize
+            line.customUnit = canvasSettings.value.customUnit
         }
     }
 
@@ -171,9 +180,11 @@ fun MainScreen() {
                             mutableStateOf(initialOffset),
                             mutableStateOf(initialOffset),
 
-                            customCoefficient = globalLine.value?.customCoefficient,
-                            customSize = globalLine.value?.customSize,
-                            customUnit = globalLine.value?.customUnit,
+                            customCoefficient = canvasSettings.value.customCoefficient,
+                            customSize = canvasSettings.value.customSize,
+                            customUnit = canvasSettings.value.customUnit,
+
+                            color = canvasSettings.value.color
                         )
                     )
 
@@ -190,7 +201,7 @@ fun MainScreen() {
         } else {
             val centroid = event.calculateCentroid()
 
-            val newScale = zoom * zoomState.value.scale
+            val newScale = (zoom * zoomState.value.scale).coerceIn(Constants.MIN_ZOOM, Constants.MAX_ZOOM)
             val newOffset = Offset(
                 zoomState.value.offset.x + -pan.x * newScale + (newScale - zoomState.value.scale) * centroid.x,
                 zoomState.value.offset.y + -pan.y * newScale + (newScale - zoomState.value.scale) * centroid.y,
@@ -233,12 +244,25 @@ fun MainScreen() {
                         focusedLine = null
                     },
                     onInherit = { line ->
-                        globalLine.value = line
+                        inheritMode = true
+                        editOpened = false
                     }
                 )
             }
         }
         ArrowMagnifier(focusPoint, zoomState.value)
+        inheritPicker?.let { inheritLine ->
+            focusedLine?.let { focusedLine ->
+                SureToInherit(
+                    inheritLine,
+                    focusedLine,
+
+                    onCancel = {
+                        inheritPicker = null
+                    }
+                )
+            }
+        }
 
         bitmap?.let { bt ->
             Image(
@@ -320,12 +344,13 @@ fun MainScreen() {
         ) {
             for (line in lineList) {
                 val lineCopy = line.attachedCopy(zoomState.value.scale, -zoomState.value.offset)
-
-                drawArrow(
-                    lineCopy
-                )
+                drawArrow(lineCopy)
             }
         }
+
+        // what ?? Try to fix it. Scale somehow is 1.0 in onDrag { } so i worked THIS out
+        val scale = remember { mutableFloatStateOf(zoomState.value.scale) }
+        scale.floatValue = zoomState.value.scale
 
         for (line in lineList) {
             val lineCopy = line.attachedCopy(zoomState.value.scale, -zoomState.value.offset)
@@ -337,7 +362,7 @@ fun MainScreen() {
                         focusedLine,
                         line,
                         focusPoint,
-                        zoomState.value.scale
+                        scale
                     )
                 },
                 endContent = {
@@ -345,7 +370,7 @@ fun MainScreen() {
                         focusedLine,
                         line,
                         focusPoint,
-                        zoomState.value.scale
+                        scale
                     )
                 },
                 centerContent = { properties ->
@@ -361,12 +386,12 @@ fun MainScreen() {
             )
         }
 
-        val saveContext = LocalContext.current
-
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
         ) {
+            val saveContext = LocalContext.current
+
             BottomControls(
                 loaded,
                 focusedLine,
@@ -385,6 +410,23 @@ fun MainScreen() {
 
                         saveContext
                     )
+                },
+                onSettings = {
+                    settingsOpened = true
+                }
+            )
+        }
+
+        if (settingsOpened) {
+            CanvasSettings(
+                canvasSettings,
+
+                onExit = { newSettings ->
+                    canvasSettings.value = newSettings
+                    settingsOpened = false
+                },
+                onInherit = {
+
                 }
             )
         }

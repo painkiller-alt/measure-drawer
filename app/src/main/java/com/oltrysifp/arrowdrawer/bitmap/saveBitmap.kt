@@ -16,7 +16,6 @@ fun saveImage(bitmap: Bitmap, context: Context, folderName: String) {
         val values = contentValues()
         values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/$folderName")
         values.put(MediaStore.Images.Media.IS_PENDING, true)
-        // RELATIVE_PATH and IS_PENDING are introduced in API 29.
 
         val uri: Uri? = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
         if (uri != null) {
@@ -26,7 +25,6 @@ fun saveImage(bitmap: Bitmap, context: Context, folderName: String) {
         }
     } else {
         val directory = File(Environment.getExternalStorageDirectory().toString() + separator + folderName)
-        // getExternalStorageDirectory is deprecated in API 29
 
         if (!directory.exists()) {
             directory.mkdirs()
@@ -36,7 +34,6 @@ fun saveImage(bitmap: Bitmap, context: Context, folderName: String) {
         saveImageToStream(bitmap, FileOutputStream(file))
         val values = contentValues()
         values.put(MediaStore.Images.Media.DATA, file.absolutePath)
-        // .DATA is deprecated in API 29
         context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
     }
 }

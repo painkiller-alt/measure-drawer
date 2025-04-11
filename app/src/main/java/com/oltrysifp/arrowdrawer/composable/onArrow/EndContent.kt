@@ -4,7 +4,6 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -16,22 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import com.oltrysifp.arrowdrawer.Palette
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.ui.theme.Secondary
-import nl.birdly.zoombox.ZoomState
+import com.oltrysifp.arrowdrawer.palette
 
 @Composable
 fun EndContent(
     focusedLine: Line?,
     line: Line,
     focusPoint: MutableState<MutableState<Offset>?>,
-    scale: Float
+    scale: MutableState<Float>
 ) {
-    // what ?? Try to fix it. Scale somehow is 1.0 in onDrag { } so i worked THIS out
-    var sc by remember { mutableFloatStateOf(scale) }
-    sc = scale
-
     if (focusedLine == line) {
         Surface(
             modifier = Modifier
@@ -46,14 +39,14 @@ fun EndContent(
                             focusPoint.value = line.end
                         },
                         onDrag = { _, dragAmount ->
-                            line.end.value += dragAmount / sc
+                            line.end.value += dragAmount / scale.value
                         },
                         onDragEnd = {
                             focusPoint.value = null
                         }
                     )
                 },
-            color = MaterialTheme.colorScheme.Secondary,
+            color = palette.secondary,
             shape = CircleShape
         ) {
 

@@ -3,25 +3,31 @@ package com.oltrysifp.arrowdrawer.composable.onArrow
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.oltrysifp.arrowdrawer.Palette
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineBoxProperties
-import com.oltrysifp.arrowdrawer.ui.theme.OnImage
-import com.oltrysifp.arrowdrawer.ui.theme.OnLine
+import com.oltrysifp.arrowdrawer.palette
 
 @Composable
 fun CentralContent(
@@ -38,32 +44,31 @@ fun CentralContent(
         else -> (length.toFloat() / 200)*screenImageScale
     }
 
+    var height by remember { mutableIntStateOf(0) }
+
     Row(
         Modifier
-            .padding(6.dp)
             .offset {
                 IntOffset(
-                    x = - (properties.width / 2),
-                    y = 0
+                    x = - properties.width/2,
+                    y = - height/2
                 )
             }
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onFocus() }
     ) {
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.OnLine
+                containerColor = palette.onLine
             ),
             shape = RoundedCornerShape(6.dp),
             modifier = Modifier
-                .offset(
-                    y = (-18).dp
-                )
-                .scale(
-                    cardSize
-                )
-                .clip(RoundedCornerShape(6.dp))
-                .clickable {
-                    onFocus()
-                },
+                .onGloballyPositioned {
+                    height = it.size.height
+                }
+                .scale(cardSize)
+                .padding(6.dp)
+                .clip(RoundedCornerShape(6.dp)),
             border = BorderStroke(
                 width = 1.2.dp,
                 color = line.color
@@ -71,8 +76,9 @@ fun CentralContent(
         ) {
             Text(
                 "$showLength",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.OnImage,
+                fontSize = 11.sp,
+                lineHeight = 16.sp,
+                color = palette.onImage,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
         }

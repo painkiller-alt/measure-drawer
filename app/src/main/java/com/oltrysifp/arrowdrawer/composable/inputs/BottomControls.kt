@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,11 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.oltrysifp.arrowdrawer.Palette
 import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.ui.theme.OnBackground
+import com.oltrysifp.arrowdrawer.palette
+import kotlinx.coroutines.delay
 
 @Composable
 fun BottomControls(
@@ -37,8 +39,14 @@ fun BottomControls(
     onEdit: () -> Unit,
     onLoad: () -> Unit,
     onExport: () -> Unit,
+    onSettings: () -> Unit
 ) {
     var isExported by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isExported) {
+        delay(2000)
+        isExported = false
+    }
 
     AnimatedContent(
         isLoaded,
@@ -61,6 +69,23 @@ fun BottomControls(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(
+                        onClick = {
+                            onSettings()
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = palette.primary
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            "settings",
+                            tint = palette.onPrimary
+                        )
+                    }
+
+                    HSpacer(4.dp)
+
                     if (focusedLine != null) {
                         val showLength = focusedLine.mutatedLength()
 
@@ -89,16 +114,22 @@ fun BottomControls(
                     IconButton(
                         onClick = {
                             onExport()
+                            isExported = true
                         },
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Transparent
+                            containerColor = palette.primary
                         )
                     ) {
-                        Icon(
-                            painterResource(R.drawable.download),
-                            "download",
-                            tint = MaterialTheme.colorScheme.OnBackground
-                        )
+                        AnimatedContent(
+                            isExported,
+                            label = "exported"
+                        ) { isExported ->
+                            Icon(
+                                painterResource(if (isExported) R.drawable.download_done else R.drawable.download),
+                                "download",
+                                tint = palette.onPrimary
+                            )
+                        }
                     }
                 }
             }

@@ -23,7 +23,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,11 +43,7 @@ import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.composable.VSpacer
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.ui.theme.OnPrimary
-import com.oltrysifp.arrowdrawer.ui.theme.OnSurfaceText
-import com.oltrysifp.arrowdrawer.ui.theme.Primary
-import com.oltrysifp.arrowdrawer.ui.theme.Red
-import com.oltrysifp.arrowdrawer.ui.theme.Surface
+import com.oltrysifp.arrowdrawer.palette
 
 @Composable
 fun EditMenu(
@@ -66,7 +61,6 @@ fun EditMenu(
 
     var isCustomCoefficient by remember { mutableStateOf(line.customCoefficient != null) }
     var isCustomSize by remember { mutableStateOf(line.customSize != null) }
-    var inheritSizeWarning by remember { mutableStateOf(false) }
 
     val color = remember { mutableStateOf(line.color) }
 
@@ -112,205 +106,150 @@ fun EditMenu(
         Card(
             shape = RoundedCornerShape(14.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.Surface
+                containerColor = palette.surface
             ),
             modifier = Modifier.height(450.dp)
         ) {
-            AnimatedContent(
-                inheritSizeWarning,
-                label = "inherit"
+            Column(
+                Modifier
+                    .padding(20.dp)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    Modifier
-                        .padding(20.dp)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (it) {
-                        InheritWarning(
-                            onAccept = {
-                                onInherit(getNewLine())
-                                inheritSizeWarning = false
-                            },
-                            onDecline = { inheritSizeWarning = false }
+                Column {
+                    Row {
+                        TextFieldDefault(
+                            text,
+                            enabled = isCustomSize,
+                            modifier = Modifier.weight(1f),
+                            maxSymbols = 10
                         )
-                    } else {
-                        Column {
-                            Row() {
-                                TextFieldDefault(
-                                    text,
-                                    enabled = isCustomSize,
-                                    modifier = Modifier.weight(1f),
-                                    maxSymbols = 10
-                                )
 
-                                AnimatedVisibility(
-                                    isCustomSize
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .width(80.dp)
-                                    ) {
-                                        HSpacer(2.dp)
-
-                                        TextFieldDefault(
-                                            customUnit,
-                                            enabled = isCustomSize,
-                                            maxSymbols = 3,
-                                            placeholder = "ед.?"
-                                        )
-                                    }
-                                }
-                            }
-
-                            VSpacer(2.dp)
-
-                            Row() {
-
-                            }
-
-                            DefaultButton(
-                                onClick = {
-                                    inheritSizeWarning = true
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = Palette.buttonColors(
-                                    container = MaterialTheme.colorScheme.Primary
-                                )
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "Наследовать размер",
-                                    )
-                                }
-                            }
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = isCustomSize,
-                                    onCheckedChange = { isChecked ->
-                                        if (isChecked) {
-                                            line.customSize = line.length()
-                                            isCustomSize = true
-                                        } else {
-                                            line.customSize = null
-                                            isCustomSize = false
-                                            isCustomCoefficient = false
-                                        }
-                                    },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = MaterialTheme.colorScheme.Primary
-                                    )
-                                )
-
-                                Text(
-                                    "Свой размер",
-                                    color = MaterialTheme.colorScheme.OnSurfaceText
-                                )
-                            }
-
-                            AnimatedVisibility(
-                                isCustomSize
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Checkbox(
-                                        checked = isCustomCoefficient,
-                                        onCheckedChange = { isChecked ->
-                                            if (isChecked) {
-                                                line.customCoefficient = 1f
-                                                isCustomCoefficient = true
-                                            } else {
-                                                line.customCoefficient = null
-                                                isCustomCoefficient = false
-                                            }
-                                        },
-                                        colors = CheckboxDefaults.colors(
-                                            checkedColor = MaterialTheme.colorScheme.Primary
-                                        )
-                                    )
-
-                                    Text(
-                                        "Динамический размер",
-                                        color = MaterialTheme.colorScheme.OnSurfaceText
-                                    )
-                                }
-                            }
-
-                            VSpacer(6.dp)
-
-                            ColorPicker(color)
-                        }
-
-                        DefaultButton(
-                            onClick = onDelete,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = Palette.buttonColors(
-                                container = MaterialTheme.colorScheme.Red
-                            )
+                        AnimatedVisibility(
+                            isCustomSize
                         ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier
+                                    .width(80.dp)
                             ) {
-                                Icon(
-                                    painterResource(R.drawable.trash),
-                                    "delete",
-                                    tint = MaterialTheme.colorScheme.OnPrimary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-
                                 HSpacer(2.dp)
 
-                                Text(
-                                    "Удалить",
+                                TextFieldDefault(
+                                    customUnit,
+                                    enabled = isCustomSize,
+                                    maxSymbols = 3,
+                                    placeholder = "ед.?"
                                 )
                             }
                         }
                     }
+
+                    VSpacer(2.dp)
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = isCustomSize,
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    line.customSize = line.length()
+                                    isCustomSize = true
+                                } else {
+                                    line.customSize = null
+                                    isCustomSize = false
+                                    isCustomCoefficient = false
+                                }
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = palette.primary
+                            )
+                        )
+
+                        Text(
+                            "Свой размер",
+                            color = palette.onSurfaceText
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        isCustomSize
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isCustomCoefficient,
+                                onCheckedChange = { isChecked ->
+                                    if (isChecked) {
+                                        line.customCoefficient = 1f
+                                        isCustomCoefficient = true
+                                    } else {
+                                        line.customCoefficient = null
+                                        isCustomCoefficient = false
+                                    }
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = palette.primary
+                                )
+                            )
+
+                            Text(
+                                "Динамический размер",
+                                color = palette.onSurfaceText
+                            )
+                        }
+                    }
+
+                    VSpacer(6.dp)
+
+                    ColorPicker(color)
+
+                    VSpacer(4.dp)
+
+                    DefaultButton(
+                        onClick = {
+                            onInherit(line)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = Palette.buttonColors(
+                            container = palette.primary
+                        )
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Наследовать параметры",
+                            )
+                        }
+                    }
                 }
-            }
-        }
-    }
-}
 
-@Composable
-fun InheritWarning(
-    onAccept: () -> Unit,
-    onDecline: () -> Unit
-) {
-    Column(
-        Modifier.fillMaxHeight(),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text("Все существующие и будущие стрелки получат коофициент, который расчитывается исходя из длины в пикселях и заданной вами вручную длины. Это действие имеет смысл при картинке без перспективы, стрелки будут иметь пропорциональный размер изначально. Если флажок 'свой размер' снят, после наследования всем стрелкам вернётся длина в пикселях.")
+                DefaultButton(
+                    onClick = onDelete,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = Palette.buttonColors(
+                        container = palette.red
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.trash),
+                            "delete",
+                            tint = palette.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
 
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            DefaultButton(
-                onClick = onDecline,
-                modifier = Modifier.fillMaxWidth(0.48f),
-                colors = Palette.buttonColors(
-                    container = MaterialTheme.colorScheme.Red
-                )
-            ) {
-                Text("Отмена")
-            }
+                        HSpacer(2.dp)
 
-            DefaultButton(
-                onClick = onAccept,
-                modifier = Modifier.fillMaxWidth(0.96f),
-                colors = Palette.buttonColors(
-                    container = MaterialTheme.colorScheme.Primary
-                )
-            ) {
-                Text("Наследовать")
+                        Text(
+                            "Удалить",
+                        )
+                    }
+                }
             }
         }
     }
@@ -341,19 +280,17 @@ fun ColorPicker(
                         .size(42.dp)
                         .clip(CircleShape)
                         .border(
-                            if (color.value == it) BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.OnSurfaceText)
-                            else BorderStroke(width = 0.dp, color = MaterialTheme.colorScheme.Surface),
+                            if (color.value == it) BorderStroke(width = 2.dp, color = palette.onSurfaceText)
+                            else BorderStroke(width = 0.dp, color = palette.surface),
                             shape = CircleShape
                         )
                 )
 
                 Box(
                     Modifier
-                        .clickable {
-                            color.value = it
-                        }
-                        .size(30.dp)
                         .clip(CircleShape)
+                        .clickable { color.value = it }
+                        .size(30.dp)
                         .background(it)
                 )
             }

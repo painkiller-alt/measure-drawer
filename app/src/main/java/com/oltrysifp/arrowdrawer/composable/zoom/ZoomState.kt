@@ -1,4 +1,4 @@
-package nl.birdly.zoombox
+package com.oltrysifp.arrowdrawer.composable.zoom
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
