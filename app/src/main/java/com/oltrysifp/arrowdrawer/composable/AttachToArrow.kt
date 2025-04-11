@@ -28,11 +28,11 @@ fun AttachToArrow(
     var elementWidth by remember { mutableIntStateOf(0) }
 
     val midPoint = Offset(
-        (line.start.value.x - line.end.value.x) / 2,
-        (line.start.value.y - line.end.value.y) / 2
+        (line.start.x - line.end.x) / 2,
+        (line.start.y - line.end.y) / 2
     )
 
-    val angle = atan2(line.end.value.y - line.start.value.y, line.end.value.x - line.start.value.x) * (180f / Math.PI).toFloat()
+    val angle = atan2(line.end.y - line.start.y, line.end.x - line.start.x) * (180f / Math.PI).toFloat()
     val props = LineBoxProperties(
         width = elementWidth,
         angle = angle
@@ -45,8 +45,8 @@ fun AttachToArrow(
             }
             .offset {
                 IntOffset(
-                    (line.end.value.x + midPoint.x).toInt(),
-                    (line.end.value.y + midPoint.y).toInt()
+                    (line.end.x + midPoint.x).toInt(),
+                    (line.end.y + midPoint.y).toInt()
                 )
             }
             .graphicsLayer {
@@ -69,8 +69,8 @@ fun AttachToArrow(
         modifier = Modifier
             .offset {
                 IntOffset(
-                    line.start.value.x.toInt(),
-                    line.start.value.y.toInt()
+                    line.start.x.toInt(),
+                    line.start.y.toInt()
                 )
             }
             .graphicsLayer {
@@ -87,8 +87,8 @@ fun AttachToArrow(
         modifier = Modifier
             .offset {
                 IntOffset(
-                    line.end.value.x.toInt(),
-                    line.end.value.y.toInt()
+                    line.end.x.toInt(),
+                    line.end.y.toInt()
                 )
             }
             .graphicsLayer {

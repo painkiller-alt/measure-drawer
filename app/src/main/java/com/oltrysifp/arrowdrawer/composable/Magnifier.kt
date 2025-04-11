@@ -12,14 +12,14 @@ import com.oltrysifp.arrowdrawer.composable.zoom.ZoomState
 
 @Composable
 fun ArrowMagnifier(
-    focusPoint: MutableState<MutableState<Offset>?>,
+    focusPoint: MutableState<Offset?>,
     zoomState: ZoomState
 ) {
     focusPoint.value?.let { focus ->
         Box(
             modifier = Modifier
                 .magnifier(
-                    sourceCenter = { focus.value * zoomState.scale - zoomState.offset },
+                    sourceCenter = { focus * zoomState.scale - zoomState.offset },
                     magnifierCenter = { Offset.Zero },
                     zoom = 2f,
                     size = DpSize(

@@ -116,7 +116,7 @@ fun MainScreen() {
     val lineList = remember {
         mutableStateListOf<Line>()
     }
-    val focusPoint = remember { mutableStateOf<MutableState<Offset>?>(null) }
+    val focusPoint = remember { mutableStateOf<Offset?>(null) }
     var focusedLine by remember { mutableStateOf<Line?>(null) }
 
     var editOpened by remember { mutableStateOf(false) }
@@ -177,8 +177,8 @@ fun MainScreen() {
                 if (!lineCreated) {
                     lineList.add(
                         Line(
-                            mutableStateOf(initialOffset),
-                            mutableStateOf(initialOffset),
+                            initialOffset,
+                            initialOffset,
 
                             customCoefficient = canvasSettings.value.customCoefficient,
                             customSize = canvasSettings.value.customSize,
@@ -195,7 +195,7 @@ fun MainScreen() {
                 } else {
                     val line = lineList.last()
 
-                    line.end.value += pan
+                    line.end += pan
                 }
             }
         } else {

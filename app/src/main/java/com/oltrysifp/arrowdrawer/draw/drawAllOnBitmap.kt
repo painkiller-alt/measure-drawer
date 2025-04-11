@@ -14,8 +14,8 @@ fun drawAllOnBitmap(
     var bt = bitmap
     for (line in lineList) {
         val lineCopy = line.copy(
-            start = mutableStateOf(line.start.value/imageScale),
-            end = mutableStateOf(line.end.value/imageScale),
+            start = line.start/imageScale,
+            end = line.end/imageScale,
         )
 
         val result = drawArrowOnBitmap(

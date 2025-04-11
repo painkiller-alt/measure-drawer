@@ -12,8 +12,8 @@ import kotlin.math.sin
 fun DrawScope.drawArrow(
     line: Line
 ) {
-    val start = line.start.value
-    val end = line.end.value
+    val start = line.start
+    val end = line.end
 
     if (start != Offset(0f, 0f)) {
         drawLine(

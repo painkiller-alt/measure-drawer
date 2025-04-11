@@ -1,25 +1,33 @@
 package com.oltrysifp.arrowdrawer.models
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 class Line(
-    var start: MutableState<Offset>,
-    var end: MutableState<Offset>,
-    var thickness: Float = 5f,
-    var color: Color = Color.Green,
+    start: Offset,
+    end: Offset,
+    thickness: Float = 5f,
+    color: Color = Color.Green,
 
     var customCoefficient: Float? = null,
     var customSize: Int? = null,
     var customUnit: String? = null
 ) {
+    var start by mutableStateOf(start)
+    var end by mutableStateOf(end)
+    var thickness by mutableFloatStateOf(thickness)
+    var color by mutableStateOf(color)
+
     fun copy(
-        start: MutableState<Offset> = this.start,
-        end: MutableState<Offset> = this.end,
+        start: Offset = this.start,
+        end: Offset = this.end,
         thickness: Float = this.thickness,
         color: Color = this.color,
         customCoefficient: Float? = this.customCoefficient,
@@ -42,15 +50,15 @@ class Line(
         imageOffset: Offset
     ): Line {
         return this.copy(
-            start = mutableStateOf(this.start.value*imageScale + imageOffset),
-            end = mutableStateOf(this.end.value*imageScale + imageOffset),
+            start = this.start*imageScale + imageOffset,
+            end = this.end*imageScale + imageOffset,
         )
     }
 
     fun length(): Int {
         val result = sqrt(
-            (this.end.value.x - this.start.value.x).pow(2) +
-               (this.end.value.y - this.start.value.y).pow(2)
+            (this.end.x - this.start.x).pow(2) +
+               (this.end.y - this.start.y).pow(2)
         )
 
         return result.toInt()

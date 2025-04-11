@@ -14,8 +14,8 @@ fun drawArrowOnBitmap(
     line: Line,
     bitmap: Bitmap
 ): Bitmap? {
-    val start = line.start.value
-    val end = line.end.value
+    val start = line.start
+    val end = line.end
 
     val newBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
 

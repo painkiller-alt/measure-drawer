@@ -22,7 +22,7 @@ import com.oltrysifp.arrowdrawer.palette
 fun StartContent(
     focusedLine: Line?,
     line: Line,
-    focusPoint: MutableState<MutableState<Offset>?>,
+    focusPoint: MutableState<Offset?>,
     scale: MutableState<Float>
 ) {
     if (focusedLine == line) {
@@ -39,7 +39,7 @@ fun StartContent(
                             focusPoint.value = line.start
                         },
                         onDrag = { _, dragAmount ->
-                            line.start.value += dragAmount / scale.value
+                            line.start += dragAmount / scale.value
                         },
                         onDragEnd = {
                             focusPoint.value = null
