@@ -51,7 +51,7 @@ fun EditMenu(
 
     onExit: (Line) -> Unit,
     onDelete: () -> Unit,
-    onInherit: (Line) -> Unit
+    onInherit: () -> Unit
 ) {
     val length = line.length()
 
@@ -209,7 +209,7 @@ fun EditMenu(
 
                     DefaultButton(
                         onClick = {
-                            onInherit(line)
+                            onInherit()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = Palette.buttonColors(

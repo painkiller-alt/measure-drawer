@@ -11,46 +11,33 @@ import androidx.compose.ui.graphics.Color
 object Palette {
     @Immutable
     data class CustomColorsPalette(
+        val primary: Color = Color(0xFF8EAB8E),
+        val secondary: Color = Color(0x528EAB8E),
+        val red: Color = Color(0xFFF87265),
+        val cancel: Color = Color(0xFF565656),
         val background: Color = Color.Unspecified,
-        val primary: Color = Color.Unspecified,
-        val secondary: Color = Color.Unspecified,
         val surface: Color = Color.Unspecified,
-        val red: Color = Color.Unspecified,
 
-        val onLine: Color = Color.Unspecified,
+        val onLine: Color = Color(0xFF181818),
+        val onPrimary: Color = Color(0xFFFFFFFF),
+        val onImage: Color = Color(0xFFF3F3F3),
         val onBackground: Color = Color.Unspecified,
-        val onPrimary: Color = Color.Unspecified,
-        val onImage: Color = Color.Unspecified,
         val onSurface: Color = Color.Unspecified,
         val onSurfaceText: Color = Color.Unspecified
     )
 
     val LightCustomColorsPalette = CustomColorsPalette(
-       background = Color(0xFFFFFBFE),
-       primary = Color(0xFF8EAB8E),
-       secondary = Color(0x528EAB8E),
-       surface = Color(0xFFE8E8E8),
-       red = Color(0xFFF87265),
-
-       onLine = Color(0xFF181818),
-       onBackground = Color(0xFF181818),
-       onPrimary = Color(0xFFFFFFFF),
-       onImage = Color(0xFFF3F3F3),
-       onSurface = Color(0xFFCAD0CA),
-       onSurfaceText = Color(0xFFCAD0CA)
+        background = Color(0xFFFFFBFE),
+        surface = Color(0xFFE8E8E8),
+        onBackground = Color(0xFF181818),
+        onSurface = Color(0xFFCAD0CA),
+        onSurfaceText = Color(0xFFCAD0CA)
     )
 
     val DarkCustomColorsPalette = CustomColorsPalette(
         background = Color(0xFFFFFBFE),
-        primary = Color(0xFF8EAB8E),
-        secondary = Color(0x528EAB8E),
         surface = Color(0xFF131313),
-        red = Color(0xFFF87265),
-
-        onLine = Color(0xFF181818),
         onBackground = Color(0xFFCEC4C4),
-        onPrimary = Color(0xFFFFFFFF),
-        onImage = Color(0xFFF3F3F3),
         onSurface = Color(0xFF2E332E),
         onSurfaceText = Color(0xFF2E332E)
     )

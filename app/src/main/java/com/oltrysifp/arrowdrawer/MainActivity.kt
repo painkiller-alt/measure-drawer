@@ -111,7 +111,6 @@ fun MainScreen() {
     var generalOffset by remember { mutableStateOf(Offset.Zero) }
     var lineCreated by remember { mutableStateOf(false) }
 
-    val globalLine = remember { mutableStateOf<Line?>(null) }
     val canvasSettings = remember { mutableStateOf(LineSettings()) }
 
     val lineList = remember {
@@ -130,7 +129,8 @@ fun MainScreen() {
         }
     }
 
-    var inheritMode by remember { mutableStateOf(false) }
+    var canvasInherit by remember { mutableStateOf(false) }
+    var lineInherit by remember { mutableStateOf(false) }
     var inheritPicker: Line? by remember { mutableStateOf(null) }
 
     LaunchedEffect(imageUri) {
@@ -146,7 +146,7 @@ fun MainScreen() {
         }
     }
 
-    LaunchedEffect(canvasSettings.value.toString()) {
+    LaunchedEffect(canvasSettings.value) {
         for (line in lineList) {
             line.customCoefficient = canvasSettings.value.customCoefficient
             line.customSize = canvasSettings.value.customSize
@@ -243,20 +243,30 @@ fun MainScreen() {
                         lineList.remove(focusedLine)
                         focusedLine = null
                     },
-                    onInherit = { line ->
-                        inheritMode = true
+                    onInherit = {
+                        lineInherit = true
                         editOpened = false
                     }
                 )
             }
         }
         ArrowMagnifier(focusPoint, zoomState.value)
-        inheritPicker?.let { inheritLine ->
-            focusedLine?.let { focusedLine ->
+        inheritPicker?.let { inherit ->
+            focusedLine?.let { focused ->
                 SureToInherit(
-                    inheritLine,
-                    focusedLine,
+                    inherit,
 
+                    onInherit = { newSettings ->
+                        if (canvasInherit) {
+                            canvasSettings.value = newSettings
+                            canvasInherit = false
+                        } else {
+                            focused.thickness = newSettings.thickness
+                            focused.color = newSettings.color
+                            lineInherit = false
+                        }
+                        inheritPicker = null
+                    },
                     onCancel = {
                         inheritPicker = null
                     }
@@ -379,7 +389,11 @@ fun MainScreen() {
                         line,
                         zoomState.value.scale,
                         onFocus = {
-                            focusedLine = line
+                            if (canvasInherit || lineInherit) {
+                                inheritPicker = line
+                            } else {
+                                focusedLine = line
+                            }
                         }
                     )
                 }
@@ -426,7 +440,8 @@ fun MainScreen() {
                     settingsOpened = false
                 },
                 onInherit = {
-
+                    settingsOpened = false
+                    canvasInherit = true
                 }
             )
         }
