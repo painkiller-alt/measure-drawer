@@ -1,4 +1,4 @@
-package com.oltrysifp.arrowdrawer
+package com.oltrysifp.arrowdrawer.util
 
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextFieldDefaults

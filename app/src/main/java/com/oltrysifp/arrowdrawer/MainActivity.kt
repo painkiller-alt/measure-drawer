@@ -9,7 +9,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -24,9 +23,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,21 +47,24 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import com.oltrysifp.arrowdrawer.bitmap.loadBitmapFromUri
 import com.oltrysifp.arrowdrawer.composable.ArrowMagnifier
-import com.oltrysifp.arrowdrawer.composable.AttachToArrow
+import com.oltrysifp.arrowdrawer.composable.AttachControlsToLine
 import com.oltrysifp.arrowdrawer.composable.EdgeToEdgeConfig
 import com.oltrysifp.arrowdrawer.composable.inputs.BottomControls
 import com.oltrysifp.arrowdrawer.composable.inputs.CanvasSettings
 import com.oltrysifp.arrowdrawer.composable.inputs.EditMenu
 import com.oltrysifp.arrowdrawer.composable.inputs.SureToInherit
-import com.oltrysifp.arrowdrawer.composable.onArrow.CentralContent
-import com.oltrysifp.arrowdrawer.composable.onArrow.EndContent
-import com.oltrysifp.arrowdrawer.composable.onArrow.StartContent
 import com.oltrysifp.arrowdrawer.composable.zoom.rememberMutableZoomState
-import com.oltrysifp.arrowdrawer.draw.drawAllAndExport
-import com.oltrysifp.arrowdrawer.draw.drawArrow
+import com.oltrysifp.arrowdrawer.draw.onBitmap.drawAllAndExport
+import com.oltrysifp.arrowdrawer.draw.onScreen.DrawAllOnScreen
+import com.oltrysifp.arrowdrawer.models.Action
+import com.oltrysifp.arrowdrawer.models.AddAction
+import com.oltrysifp.arrowdrawer.models.DeleteAction
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineSettings
+import com.oltrysifp.arrowdrawer.models.enums.InheritType
+import com.oltrysifp.arrowdrawer.models.undoAction
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
+import com.oltrysifp.arrowdrawer.util.Constants
 import com.oltrysifp.arrowdrawer.util.log
 import kotlin.math.abs
 
@@ -91,47 +91,34 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
+    val mContext = LocalContext.current
+
     val zoomState = rememberMutableZoomState()
     val immutableZoomState = zoomState.value
-
-    val mContext = LocalContext.current
-    val displayMetrics = mContext.resources.displayMetrics
-    val screenWidth = displayMetrics.widthPixels
-
-    var imageUri: Uri? by remember { mutableStateOf(null) }
-    var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
-    var loaded by remember { mutableStateOf(false) }
-
-    var imageScale by remember { mutableFloatStateOf(1f) }
+    var initialOffset by remember { mutableStateOf(Offset.Zero) }
+    var generalOffset by remember { mutableStateOf(Offset.Zero) }
 
     var isDragging by remember { mutableStateOf(false) }
 
-    val offsetThreshold = 50f
-    var initialOffset by remember { mutableStateOf(Offset.Zero) }
-    var generalOffset by remember { mutableStateOf(Offset.Zero) }
-    var lineCreated by remember { mutableStateOf(false) }
-
     val canvasSettings = remember { mutableStateOf(LineSettings()) }
 
-    val lineList = remember {
-        mutableStateListOf<Line>()
-    }
+    val lineList = remember { mutableStateListOf<Line>() }
     val focusPoint = remember { mutableStateOf<Offset?>(null) }
     var focusedLine by remember { mutableStateOf<Line?>(null) }
+    val actionStack = remember { mutableStateListOf<Action>() }
 
     var editOpened by remember { mutableStateOf(false) }
     var settingsOpened by remember { mutableStateOf(false) }
 
-    val pickMedia = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) {
-            imageUri = uri
-        }
-    }
-
-    var canvasInherit by remember { mutableStateOf(false) }
-    var lineInherit by remember { mutableStateOf(false) }
+    var inheritType by remember { mutableStateOf(InheritType.NONE) }
     var inheritPicker: Line? by remember { mutableStateOf(null) }
+
+    var imageUri: Uri? by remember { mutableStateOf(null) }
+    var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
+    var imageLoaded by remember { mutableStateOf(false) }
+    val pickMedia = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) { imageUri = uri } }
 
     LaunchedEffect(imageUri) {
         imageUri?.let {
@@ -139,9 +126,7 @@ fun MainScreen() {
 
             val bt = bitmap
             if (bt != null) {
-                val scaleC: Float = screenWidth.toFloat() / bt.width
-                imageScale = scaleC
-                loaded = true
+                imageLoaded = true
             }
         }
     }
@@ -163,32 +148,28 @@ fun MainScreen() {
                 y = abs(initialOffset.y - generalOffset.y)
             )
 
-            if (
-                deltaOffset.x > offsetThreshold || deltaOffset.y > offsetThreshold
-            ) {
-                if (!lineCreated) {
-                    lineList.add(
-                        Line(
-                            initialOffset,
-                            initialOffset,
+            if (deltaOffset.x > Constants.OFFSET_THRESHOLD ||
+                deltaOffset.y > Constants.OFFSET_THRESHOLD) {
+                if (focusPoint.value == null) {
+                    val newLine = Line(
+                        initialOffset,
+                        initialOffset,
 
-                            customCoefficient = canvasSettings.value.customCoefficient,
-                            customSize = canvasSettings.value.customSize,
-                            customUnit = canvasSettings.value.customUnit,
+                        customCoefficient = canvasSettings.value.customCoefficient,
+                        customSize = canvasSettings.value.customSize,
+                        customUnit = canvasSettings.value.customUnit,
 
-                            color = canvasSettings.value.color,
-                            thickness = canvasSettings.value.thickness
-                        )
+                        color = canvasSettings.value.color,
+                        thickness = canvasSettings.value.thickness
                     )
-
-                    val line = lineList.last()
-                    focusedLine = line
-                    focusPoint.value = line.end
-                    lineCreated = true
+                    lineList.add(newLine)
+                    actionStack.add(AddAction(newLine))
+                    focusedLine = newLine
+                    focusPoint.value = newLine.end
                 } else {
-                    val line = lineList.last()
-
+                    val line = focusedLine!!
                     line.end += pan
+                    focusPoint.value = line.end
                 }
             }
         } else {
@@ -211,7 +192,6 @@ fun MainScreen() {
 
     val onDragEnd = {
         focusPoint.value = null
-        lineCreated = false
         initialOffset = Offset.Zero
         generalOffset = Offset.Zero
     }
@@ -220,8 +200,8 @@ fun MainScreen() {
         Modifier
             .fillMaxSize()
     ) {
-        focusedLine?.let {
-            if (editOpened) {
+        if (editOpened) {
+            focusedLine?.let {
                 EditMenu(
                     it,
                     onExit = { newLine ->
@@ -231,11 +211,12 @@ fun MainScreen() {
                     onDelete = {
                         editOpened = false
 
+                        actionStack.add(DeleteAction(it))
                         lineList.remove(focusedLine)
                         focusedLine = null
                     },
                     onInherit = {
-                        lineInherit = true
+                        inheritType = InheritType.LINE
                         editOpened = false
                     }
                 )
@@ -248,14 +229,13 @@ fun MainScreen() {
                     inherit,
 
                     onInherit = { newSettings ->
-                        if (canvasInherit) {
+                        if (inheritType == InheritType.CANVAS) {
                             canvasSettings.value = newSettings
-                            canvasInherit = false
                         } else {
                             focused.thickness = newSettings.thickness
                             focused.color = newSettings.color
-                            lineInherit = false
                         }
+                        inheritType = InheritType.NONE
                         inheritPicker = null
                     },
                     onCancel = {
@@ -280,7 +260,6 @@ fun MainScreen() {
                         awaitEachGesture {
                             // Wait for the first down event (gesture starts)
                             val firstDown = awaitFirstDown(requireUnconsumed = false)
-
                             val position = firstDown.position
                             var offset = Offset.Zero + position
 
@@ -339,55 +318,19 @@ fun MainScreen() {
             )
         }
 
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            for (line in lineList) {
-                val lineCopy = line.attachedCopy(zoomState.value.scale, -zoomState.value.offset)
-                drawArrow(lineCopy)
-            }
-        }
-
-        // what ?? Try to fix it. Scale somehow is 1.0 in onDrag { } so i worked THIS out
-        val scale = remember { mutableFloatStateOf(zoomState.value.scale) }
-        scale.floatValue = zoomState.value.scale
+        DrawAllOnScreen(lineList, zoomState)
 
         for (line in lineList) {
-            val lineCopy = line.attachedCopy(zoomState.value.scale, -zoomState.value.offset)
+            AttachControlsToLine(
+                line,
+                zoomState,
+                focusedLine,
+                focusPoint,
+                actionStack,
+                inheritType,
 
-            AttachToArrow(
-                lineCopy,
-                startContent = {
-                    StartContent(
-                        focusedLine,
-                        line,
-                        focusPoint,
-                        scale
-                    )
-                },
-                endContent = {
-                    EndContent(
-                        focusedLine,
-                        line,
-                        focusPoint,
-                        scale
-                    )
-                },
-                centerContent = { properties ->
-                    CentralContent(
-                        properties,
-                        line,
-                        zoomState.value.scale,
-                        onFocus = {
-                            if (canvasInherit || lineInherit) {
-                                inheritPicker = line
-                            } else {
-                                focusedLine = line
-                            }
-                        }
-                    )
-                }
+                {inheritPicker = it},
+                {focusedLine = it}
             )
         }
 
@@ -398,9 +341,19 @@ fun MainScreen() {
             val saveContext = LocalContext.current
 
             BottomControls(
-                loaded,
+                imageLoaded,
+                actionStack,
                 focusedLine,
 
+                onUndo = {
+                    val lastIndex = actionStack.lastIndex
+                    if (lastIndex != -1) {
+                        undoAction(actionStack[lastIndex], lineList, focusedLine) { focusedLine = it }
+                        log("a")
+                        log(focusedLine)
+                        actionStack.removeAt(lastIndex)
+                    }
+                },
                 onEdit = {
                     editOpened = true
                 },
@@ -411,7 +364,6 @@ fun MainScreen() {
                     drawAllAndExport(
                         bitmap,
                         lineList,
-                        imageScale,
 
                         saveContext
                     )
@@ -432,7 +384,7 @@ fun MainScreen() {
                 },
                 onInherit = {
                     settingsOpened = false
-                    canvasInherit = true
+                    inheritType = InheritType.CANVAS
                 }
             )
         }

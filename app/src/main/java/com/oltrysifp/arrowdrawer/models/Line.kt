@@ -1,6 +1,5 @@
 package com.oltrysifp.arrowdrawer.models
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +8,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class Line(
     start: Offset,
@@ -18,7 +18,9 @@ class Line(
 
     customCoefficient: Float? = null,
     customSize: Int? = null,
-    customUnit: String? = null
+    customUnit: String? = null,
+
+    val hash: Int = Random.nextInt()
 ) {
     var start by mutableStateOf(start)
     var end by mutableStateOf(end)
@@ -36,7 +38,8 @@ class Line(
         color: Color = this.color,
         customCoefficient: Float? = this.customCoefficient,
         customSize: Int? = this.customSize,
-        customUnit: String? = this.customUnit
+        customUnit: String? = this.customUnit,
+        hash: Int = this.hash
     ): Line {
         return Line(
             start,
@@ -45,7 +48,8 @@ class Line(
             color,
             customCoefficient,
             customSize,
-            customUnit
+            customUnit,
+            hash
         )
     }
 

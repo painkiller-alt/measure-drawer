@@ -1,4 +1,4 @@
-package com.oltrysifp.arrowdrawer.draw
+package com.oltrysifp.arrowdrawer.draw.onScreen
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path

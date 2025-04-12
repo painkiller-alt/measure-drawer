@@ -1,4 +1,4 @@
-package com.oltrysifp.arrowdrawer
+package com.oltrysifp.arrowdrawer.util
 
 import androidx.compose.ui.graphics.Color
 
@@ -16,4 +16,6 @@ object Constants {
 
     const val MIN_THICKNESS = 1f
     const val MAX_THICKNESS = 10f
+
+    const val OFFSET_THRESHOLD = 50f
 }

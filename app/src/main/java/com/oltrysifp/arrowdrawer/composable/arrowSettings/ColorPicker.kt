@@ -17,25 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.oltrysifp.arrowdrawer.palette
+import com.oltrysifp.arrowdrawer.util.Constants
+import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
 fun ColorPicker(
     color: MutableState<Color>
 ) {
-    val colors = listOf(
-        Color.Red,
-        Color.Green,
-        Color.Blue,
-        Color.White,
-        Color.Black
-    )
-
     Row(
         horizontalArrangement = Arrangement.SpaceAround,
         modifier = Modifier.fillMaxWidth()
     ) {
-        colors.forEach {
+        Constants.lineColors.forEach {
             Box(
                 contentAlignment = Alignment.Center
             ) {

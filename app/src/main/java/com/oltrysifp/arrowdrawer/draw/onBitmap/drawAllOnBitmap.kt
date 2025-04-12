@@ -1,21 +1,20 @@
-package com.oltrysifp.arrowdrawer.draw
+package com.oltrysifp.arrowdrawer.draw.onBitmap
 
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.compose.runtime.mutableStateOf
 import com.oltrysifp.arrowdrawer.bitmap.saveImage
 import com.oltrysifp.arrowdrawer.models.Line
 
 fun drawAllOnBitmap(
     bitmap: Bitmap,
     lineList: List<Line>,
-    imageScale: Float
+    scaleC: Float
 ): Bitmap {
     var bt = bitmap
     for (line in lineList) {
         val lineCopy = line.copy(
-            start = line.start/imageScale,
-            end = line.end/imageScale,
+            start = line.start/scaleC,
+            end = line.end/scaleC,
         )
 
         val result = drawArrowOnBitmap(
@@ -34,16 +33,19 @@ fun drawAllOnBitmap(
 fun drawAllAndExport(
     bitmap: Bitmap?,
     lineList: List<Line>,
-    imageScale: Float,
 
     context: Context,
     folder: String = "ArrowDrawerResult"
 ) {
     bitmap?.let {
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val scaleC: Float = screenWidth.toFloat() / bitmap.width
+
         val bt = drawAllOnBitmap(
             bitmap,
             lineList,
-            imageScale
+            scaleC
         )
 
         saveImage(

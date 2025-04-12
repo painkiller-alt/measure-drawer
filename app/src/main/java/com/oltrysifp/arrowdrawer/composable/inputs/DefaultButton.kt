@@ -6,7 +6,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.oltrysifp.arrowdrawer.Palette
+import com.oltrysifp.arrowdrawer.util.Palette
 
 @Composable
 fun DefaultButton(

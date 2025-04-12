@@ -1,4 +1,4 @@
-package com.oltrysifp.arrowdrawer.draw
+package com.oltrysifp.arrowdrawer.draw.onBitmap
 
 import android.graphics.Bitmap
 import android.graphics.Canvas

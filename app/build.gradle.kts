@@ -12,8 +12,8 @@ android {
         applicationId = "com.oltrysifp.arrowdrawer"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "beta_1.0a"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

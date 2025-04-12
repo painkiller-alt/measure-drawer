@@ -8,23 +8,30 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.oltrysifp.arrowdrawer.models.Action
+import com.oltrysifp.arrowdrawer.models.ChangeAction
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.palette
+import com.oltrysifp.arrowdrawer.models.enums.NodePosition
+import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
-fun StartContent(
+fun MoveNode(
     focusedLine: Line?,
     line: Line,
     focusPoint: MutableState<Offset?>,
-    scale: MutableState<Float>
+    scale: Float,
+    actionStack: MutableList<Action>,
+    pos: NodePosition
 ) {
+    var startPos by remember { mutableStateOf(line) }
+
     if (focusedLine == line) {
         Surface(
             modifier = Modifier
@@ -33,16 +40,28 @@ fun StartContent(
                     y = (-15).dp,
                     x = (-15).dp
                 )
-                .pointerInput(Unit) {
+                .pointerInput(line, scale) {
                     detectDragGestures(
                         onDragStart = {
-                            focusPoint.value = line.start
+                            startPos = line.copy()
                         },
                         onDrag = { _, dragAmount ->
-                            line.start += dragAmount / scale.value
+                            if (pos == NodePosition.START) {
+                                line.start += dragAmount / scale
+                                focusPoint.value = line.start
+                            } else {
+                                line.end += dragAmount / scale
+                                focusPoint.value = line.end
+                            }
                         },
                         onDragEnd = {
                             focusPoint.value = null
+                            actionStack.add(
+                                ChangeAction(
+                                    startPos,
+                                    line
+                                )
+                            )
                         }
                     )
                 },

@@ -1,7 +1,9 @@
 package com.oltrysifp.arrowdrawer.composable.inputs
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,22 +22,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
+import com.oltrysifp.arrowdrawer.models.Action
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.palette
+import com.oltrysifp.arrowdrawer.util.palette
 import kotlinx.coroutines.delay
 
 @Composable
 fun BottomControls(
     isLoaded: Boolean,
-
+    actionStack: List<Action>,
     focusedLine: Line?,
 
+    onUndo: () -> Unit,
     onEdit: () -> Unit,
     onLoad: () -> Unit,
     onExport: () -> Unit,
@@ -64,24 +67,43 @@ fun BottomControls(
                     .padding(8.dp)
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    IconButton(
-                        onClick = {
-                            onSettings()
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = palette.primary
-                        )
-                    ) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            "settings",
-                            tint = palette.onPrimary
-                        )
+                    Column {
+                        AnimatedVisibility(
+                            actionStack.isNotEmpty()
+                        ) {
+                            IconButton(
+                                onClick = { onUndo() },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = palette.primary
+                                )
+                            ) {
+                                Icon(
+                                    painterResource(R.drawable.undo),
+                                    "undo",
+                                    tint = palette.onPrimary
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = {
+                                onSettings()
+                            },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = palette.primary
+                            )
+                        ) {
+                            Icon(
+                                Icons.Filled.Settings,
+                                "settings",
+                                tint = palette.onPrimary
+                            )
+                        }
                     }
 
                     HSpacer(4.dp)
