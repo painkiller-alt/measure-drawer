@@ -3,7 +3,6 @@ package com.oltrysifp.arrowdrawer.util
 import androidx.compose.ui.graphics.Color
 
 object Constants {
-    const val MIN_ZOOM = 0.75f
     const val MAX_ZOOM = 100f
 
     val lineColors = listOf(

@@ -109,7 +109,8 @@ fun BottomControls(
                     HSpacer(4.dp)
 
                     if (focusedLine != null) {
-                        val showLength = focusedLine.mutatedLength()
+                        val length = focusedLine.mutatedLength()
+                        val lengthText = if (length < 10) "%.2f".format(length) else length.toInt().toString()
 
                         DefaultButton(
                             onClick = {
@@ -125,7 +126,7 @@ fun BottomControls(
                             HSpacer(2.dp)
 
                             Text(
-                                "$showLength",
+                                lengthText,
                                 fontSize = 14.sp
                             )
                         }

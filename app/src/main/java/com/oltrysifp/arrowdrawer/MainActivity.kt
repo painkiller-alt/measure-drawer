@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -113,6 +114,7 @@ fun MainScreen() {
     var inheritType by remember { mutableStateOf(InheritType.NONE) }
     var inheritPicker: Line? by remember { mutableStateOf(null) }
 
+    var imageMinScale by remember { mutableFloatStateOf(0.75f) }
     var imageUri: Uri? by remember { mutableStateOf(null) }
     var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
     var imageLoaded by remember { mutableStateOf(false) }
@@ -124,8 +126,14 @@ fun MainScreen() {
         imageUri?.let {
             bitmap = loadBitmapFromUri(mContext, it)
 
-            val bt = bitmap
-            if (bt != null) {
+            bitmap?.let { bt ->
+                val displayMetrics = mContext.resources.displayMetrics
+                val screenWidth = displayMetrics.widthPixels
+                zoomState.value = zoomState.value.copy(
+                    scale = screenWidth.toFloat() / bt.width,
+                    offset = zoomState.value.offset
+                )
+                imageMinScale = zoomState.value.scale * 0.75f
                 imageLoaded = true
             }
         }
@@ -175,7 +183,7 @@ fun MainScreen() {
         } else {
             val centroid = event.calculateCentroid()
 
-            val newScale = (zoom * zoomState.value.scale).coerceIn(Constants.MIN_ZOOM, Constants.MAX_ZOOM)
+            val newScale = (zoom * zoomState.value.scale).coerceIn(imageMinScale, Constants.MAX_ZOOM)
             val newOffset = Offset(
                 zoomState.value.offset.x + -pan.x * newScale + (newScale - zoomState.value.scale) * centroid.x,
                 zoomState.value.offset.y + -pan.y * newScale + (newScale - zoomState.value.scale) * centroid.y,

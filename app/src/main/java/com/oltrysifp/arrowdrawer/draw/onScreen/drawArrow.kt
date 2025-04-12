@@ -22,7 +22,7 @@ fun DrawScope.drawArrow(
             end = end,
             strokeWidth = line.thickness
         )
-        val arrowHeadSize = 30f
+        val arrowHeadSize = (6f*line.thickness).coerceIn(10f, 100f)
 
         val arrowAngle = Math.toRadians(30.0) // 30-degree arrowhead angle
         val angle = atan2(end.y - start.y, end.x - start.x)
@@ -45,11 +45,13 @@ fun DrawScope.drawArrow(
             start.y + arrowHeadSize * sin(angle + arrowAngle).toFloat()
         )
 
+        val xShift = 0.25f*line.thickness
+
         drawPath(
             path = Path().apply {
-                moveTo(start.x, start.y)
+                moveTo(start.x+xShift, start.y)
                 lineTo(startArrowPoint1.x, startArrowPoint1.y)
-                moveTo(start.x, start.y)
+                moveTo(start.x+xShift, start.y)
                 lineTo(startArrowPoint2.x, startArrowPoint2.y)
             },
             color = line.color,
@@ -58,9 +60,9 @@ fun DrawScope.drawArrow(
 
         drawPath(
             path = Path().apply {
-                moveTo(end.x, end.y)
+                moveTo(end.x-xShift, end.y)
                 lineTo(endArrowPoint1.x, endArrowPoint1.y)
-                moveTo(end.x, end.y)
+                moveTo(end.x-xShift, end.y)
                 lineTo(endArrowPoint2.x, endArrowPoint2.y)
             },
             color = line.color,

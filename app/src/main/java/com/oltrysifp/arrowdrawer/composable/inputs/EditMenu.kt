@@ -48,7 +48,7 @@ fun EditMenu(
 ) {
     val length = line.length()
 
-    val text = remember { mutableStateOf(line.mutatedLength().toString()) }
+    val text = remember { mutableStateOf(line.mutatedLength().toInt().toString()) }
 
     val customUnit = remember { mutableStateOf(line.customUnit ?: "") }
 
@@ -61,7 +61,7 @@ fun EditMenu(
     fun getNewLine(): Line {
         val newLine = line.copy()
 
-        val coefficient = text.value.toInt().toFloat() / length.toFloat()
+        val coefficient = text.value.toInt().toFloat() / length
         if (isCustomCoefficient) {
             newLine.customCoefficient = coefficient
         } else if (isCustomSize) {
@@ -86,7 +86,7 @@ fun EditMenu(
 
     LaunchedEffect(isCustomCoefficient, isCustomSize) {
         val newLine = getNewLine()
-        text.value = newLine.mutatedLength().toString()
+        text.value = newLine.mutatedLength().toInt().toString()
     }
 
     Dialog(
@@ -148,7 +148,7 @@ fun EditMenu(
                             checked = isCustomSize,
                             onCheckedChange = { isChecked ->
                                 if (isChecked) {
-                                    line.customSize = line.length()
+                                    line.customSize = length.toInt()
                                     isCustomSize = true
                                 } else {
                                     line.customSize = null

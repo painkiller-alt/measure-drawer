@@ -33,11 +33,12 @@ fun CentralContent(
     onFocus: () -> Unit
 ) {
     val length = line.length()
-    val showLength = line.mutatedLength()
+    val mutatedLength = line.mutatedLength()
+    val lengthText = if (length < 10) "%.2f".format(mutatedLength) else mutatedLength.toInt().toString()
 
     val cardSize = when {
         length*screenImageScale > 200 -> 1f
-        else -> (length.toFloat() / 200)*screenImageScale
+        else -> (length / 200)*screenImageScale
     }
 
     var height by remember { mutableIntStateOf(0) }
@@ -66,12 +67,12 @@ fun CentralContent(
                 .padding(6.dp)
                 .clip(RoundedCornerShape(6.dp)),
             border = BorderStroke(
-                width = 1.2.dp,
+                width = (line.thickness*0.24f).dp,
                 color = line.color
             )
         ) {
             Text(
-                "$showLength",
+                lengthText,
                 fontSize = 11.sp,
                 lineHeight = 16.sp,
                 color = palette.onImage,

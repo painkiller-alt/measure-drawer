@@ -72,16 +72,16 @@ class Line(
         )
     }
 
-    fun length(): Int {
+    fun length(): Float {
         val result = sqrt(
             (this.end.x - this.start.x).pow(2) +
                (this.end.y - this.start.y).pow(2)
         )
 
-        return result.toInt()
+        return result
     }
 
-    fun mutatedLength(): Int {
+    fun mutatedLength(): Float {
         var coefficient: Float? = null
         this.customCoefficient?.let {
             coefficient = it
@@ -90,13 +90,13 @@ class Line(
         val customSize = this.customSize
         return if (customSize != null) {
             if (coefficient != null) {
-                (this.length().toFloat() * coefficient!!).toInt()
+                this.length() * coefficient!!
             } else {
-                (customSize.toFloat()).toInt()
+                customSize.toFloat()
             }
         } else {
             if (coefficient != null) {
-                (this.length().toFloat() * coefficient!!).toInt()
+                this.length() * coefficient!!
             } else {
                 this.length()
             }
