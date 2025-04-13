@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.oltrysifp.arrowdrawer.composable.VSpacer
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ColorPicker
@@ -112,6 +113,7 @@ fun CanvasSettings(
                         ) {
                             Text(
                                 "Наследовать параметры",
+                                textAlign = TextAlign.Center
                             )
                         }
                     }

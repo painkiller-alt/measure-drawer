@@ -269,6 +269,7 @@ fun MainScreen(
                     },
                     onCancel = {
                         inheritPicker = null
+                        inheritType = InheritType.NONE
                     }
                 )
             }

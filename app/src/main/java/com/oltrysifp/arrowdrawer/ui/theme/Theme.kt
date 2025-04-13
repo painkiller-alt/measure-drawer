@@ -10,11 +10,11 @@ import com.oltrysifp.arrowdrawer.util.LocalCustomColorsPalette
 import com.oltrysifp.arrowdrawer.util.Palette
 
 private val DarkColorScheme = darkColorScheme(
-
+    background = Palette.DarkCustomColorsPalette.background
 )
 
 private val LightColorScheme = lightColorScheme(
-
+    background = Palette.LightCustomColorsPalette.background
 )
 
 @Composable

@@ -322,19 +322,24 @@ fun AddButton(
             Modifier.size(40.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (!isSaving) {
-                Icon(
-                    Icons.Filled.Add,
-                    "Create project",
-                    tint = palette.onPrimary
-                )
-            } else {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 1.dp,
-                    color = palette.primary,
-                    trackColor = palette.onSurface,
-                )
+            AnimatedContent(
+                isSaving,
+                label = "isSaving"
+            ) {
+                if (!it) {
+                    Icon(
+                        Icons.Filled.Add,
+                        "Create project",
+                        tint = palette.onPrimary
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 1.dp,
+                        color = palette.primary,
+                        trackColor = palette.onSurface,
+                    )
+                }
             }
         }
     }

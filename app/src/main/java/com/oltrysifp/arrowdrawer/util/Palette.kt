@@ -35,9 +35,9 @@ object Palette {
     )
 
     val DarkCustomColorsPalette = CustomColorsPalette(
-        background = Color(0xFFFFFBFE),
+        background = Color(0xFF151515),
         surface = Color(0xFF131313),
-        onBackground = Color(0xFFCEC4C4),
+        onBackground = Color(0xFFDCDCDC),
         onSurface = Color(0xFF2E332E),
         onSurfaceText = Color(0xFF2E332E)
     )

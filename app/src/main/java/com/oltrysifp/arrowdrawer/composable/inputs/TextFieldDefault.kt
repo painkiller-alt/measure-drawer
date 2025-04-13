@@ -19,6 +19,7 @@ fun TextFieldDefault(
     maxSymbols: Int = 32,
     placeholder: String? = null,
     enabled: Boolean = true,
+    singleLine: Boolean = true
 ) {
     TextField(
         value.value,
@@ -31,6 +32,7 @@ fun TextFieldDefault(
         colors = colors,
         enabled = enabled,
         modifier = modifier,
+        singleLine = singleLine,
         placeholder = {
             if (placeholder != null) {
                 Text(
