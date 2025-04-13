@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import kotlinx.serialization.Serializable
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -60,6 +62,10 @@ class Line(
         this.end = line.end
         this.color = line.color
         this.thickness = line.thickness
+
+        this.customUnit = line.customUnit
+        this.customSize = line.customSize
+        this.customCoefficient = line.customCoefficient
     }
 
     fun attachedCopy(
@@ -102,4 +108,48 @@ class Line(
             }
         }
     }
+
+
+    // Convert to serializable DTO
+    fun toDto(): LineDto = LineDto(
+        startX = start.x,
+        startY = start.y,
+        endX = end.x,
+        endY = end.y,
+        thickness = thickness,
+        color = color.toArgb(),
+        customCoefficient = customCoefficient,
+        customSize = customSize,
+        customUnit = customUnit,
+        hash = hash
+    )
+
+    companion object {
+        // Recreate from DTO
+        fun fromDto(dto: LineDto): Line = Line(
+            start = Offset(dto.startX, dto.startY),
+            end = Offset(dto.endX, dto.endY),
+            thickness = dto.thickness,
+            color = Color(dto.color),
+            customCoefficient = dto.customCoefficient,
+            customSize = dto.customSize,
+            customUnit = dto.customUnit,
+            hash = dto.hash
+        )
+    }
 }
+
+
+@Serializable
+data class LineDto(
+    val startX: Float,
+    val startY: Float,
+    val endX: Float,
+    val endY: Float,
+    val thickness: Float,
+    val color: Int,
+    val customCoefficient: Float?,
+    val customSize: Int?,
+    val customUnit: String?,
+    val hash: Int
+)

@@ -2,8 +2,8 @@ package com.oltrysifp.arrowdrawer.draw.onBitmap
 
 import android.content.Context
 import android.graphics.Bitmap
-import com.oltrysifp.arrowdrawer.bitmap.saveImage
 import com.oltrysifp.arrowdrawer.models.Line
+import com.oltrysifp.arrowdrawer.util.bitmap.saveImage
 
 fun drawAllOnBitmap(
     bitmap: Bitmap,

@@ -7,21 +7,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,9 +31,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,19 +43,19 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.oltrysifp.arrowdrawer.bitmap.loadAllProjectsFromAppStorage
-import com.oltrysifp.arrowdrawer.bitmap.loadBitmapFromUri
-import com.oltrysifp.arrowdrawer.bitmap.saveBitmapToInternalStorage
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oltrysifp.arrowdrawer.composable.EdgeToEdgeConfig
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.composable.VSpacer
 import com.oltrysifp.arrowdrawer.models.Project
+import com.oltrysifp.arrowdrawer.repositories.ProjectRepository
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
-import com.oltrysifp.arrowdrawer.util.log
+import com.oltrysifp.arrowdrawer.util.bitmap.loadBitmapFromUri
 import com.oltrysifp.arrowdrawer.util.palette
+import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModel
+import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModelFactory
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -69,8 +64,9 @@ class Menu : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val mContext = LocalContext.current
-
-            val projectCreated = remember { mutableStateOf(false) }
+            val repository = remember { ProjectRepository(mContext) }
+            val viewModelFactory = remember { ProjectViewModelFactory(repository) }
+            val viewModel: ProjectViewModel = viewModel(factory = viewModelFactory)
 
             var imageUri: Uri? by remember { mutableStateOf(null) }
             var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
@@ -86,14 +82,13 @@ class Menu : ComponentActivity() {
                     val filename = "project ${abs(Random.nextInt())}"
                     bitmap = loadBitmapFromUri(mContext, uri)
                     bitmap?.let { bt ->
-                        val saveResult = saveBitmapToInternalStorage(
-                            mContext,
-                            bt,
-                            "origin",
-                            filename
+                        viewModel.createProject(
+                            Project(
+                                filename,
+                                bt,
+                                listOf()
+                            )
                         )
-                        log(saveResult)
-                        projectCreated.value = true
                         imageUri = null
                     }
                 }
@@ -121,7 +116,7 @@ class Menu : ComponentActivity() {
                             .fillMaxSize()
                             .padding(innerPadding)
                     ) {
-                        MenuScreen(projectCreated)
+                        MenuScreen()
                     }
                 }
             }
@@ -131,18 +126,11 @@ class Menu : ComponentActivity() {
 
 @Composable
 fun MenuScreen(
-    projectCreated: MutableState<Boolean>
+    viewModel: ProjectViewModel = viewModel()
 ) {
     val mContext = LocalContext.current
 
-    val projects = remember { mutableStateListOf<Project>() }
-
-    LaunchedEffect(projectCreated.value) {
-        val allProjects = loadAllProjectsFromAppStorage(mContext)
-        projects.clear()
-        projects.addAll(allProjects)
-        projectCreated.value = false
-    }
+    val projects by viewModel.projects.collectAsState()
 
     Column(
         modifier = Modifier

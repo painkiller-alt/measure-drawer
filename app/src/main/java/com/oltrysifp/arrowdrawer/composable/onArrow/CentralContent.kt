@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineBoxProperties
-import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
@@ -36,6 +35,7 @@ fun CentralContent(
     val length = line.length()
     val mutatedLength = line.mutatedLength()
     val lengthText = if (length < 10) "%.2f".format(mutatedLength) else mutatedLength.toInt().toString()
+    val unitText = if (line.customUnit != null) line.customUnit else ""
 
     val cardSize = when {
         length*screenImageScale > 200 -> 1f
@@ -73,7 +73,7 @@ fun CentralContent(
             )
         ) {
             Text(
-                lengthText,
+                lengthText + unitText,
                 fontSize = 11.sp,
                 lineHeight = 16.sp,
                 color = palette.onImage,

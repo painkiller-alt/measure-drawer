@@ -1,15 +1,9 @@
 package com.oltrysifp.arrowdrawer
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -24,6 +18,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -47,7 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
-import com.oltrysifp.arrowdrawer.bitmap.loadBitmapFromUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oltrysifp.arrowdrawer.composable.ArrowMagnifier
 import com.oltrysifp.arrowdrawer.composable.AttachControlsToLine
 import com.oltrysifp.arrowdrawer.composable.EdgeToEdgeConfig
@@ -66,13 +61,18 @@ import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.models.enums.InheritType
 import com.oltrysifp.arrowdrawer.models.undoAction
+import com.oltrysifp.arrowdrawer.repositories.ProjectRepository
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
 import com.oltrysifp.arrowdrawer.util.Constants
-import com.oltrysifp.arrowdrawer.util.log
-import java.io.File
+import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModel
+import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModelFactory
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
+    private val viewModel: ProjectViewModel by viewModels {
+        ProjectViewModelFactory(ProjectRepository(this))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -88,38 +88,41 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(innerPadding)
                     ) {
-                        val context = LocalContext.current
+                        val currentProject by viewModel.currentProject.collectAsState()
 
-                        var project by remember { mutableStateOf<Project?>(null) }
-                        val appDir = context.getExternalFilesDir(null) ?: return@Box
-                        appDir.listFiles()?.forEach { directory ->
-                            if (directory.isDirectory && directory.name == projectName) {
-                                val originFile = File(directory, "origin.png")
-
-                                if (originFile.exists() && originFile.isFile) {
-                                    project = Project(
-                                        name = directory.name,
-                                        image = BitmapFactory.decodeFile(originFile.absolutePath)
-                                    )
-                                }
-                            }
+                        LaunchedEffect(Unit) {
+                            viewModel.loadProject(projectName)
                         }
 
-                        project?.let {
-                            MainScreen(it.image)
+                        currentProject?.let {
+                            MainScreen(it, viewModel)
                         }
                     }
                 }
             }
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.forceSave()
+    }
 }
 
 @Composable
 fun MainScreen(
-    bitmap: Bitmap
+    project: Project,
+    viewModel: ProjectViewModel = viewModel()
 ) {
     val mContext = LocalContext.current
+
+    val bitmap = project.image
+
+    val lineList = remember { mutableStateListOf<Line>() }
+    LaunchedEffect(Unit) {
+        lineList.clear() // clear existing lines
+        lineList.addAll(project.objects) // load the lines into lineList
+    }
 
     val zoomState = rememberMutableZoomState()
     val immutableZoomState = zoomState.value
@@ -131,7 +134,6 @@ fun MainScreen(
 
     val canvasSettings = remember { mutableStateOf(LineSettings()) }
 
-    val lineList = remember { mutableStateListOf<Line>() }
     val focusPoint = remember { mutableStateOf<Offset?>(null) }
     var focusedLine by remember { mutableStateOf<Line?>(null) }
     val actionStack = remember { mutableStateListOf<Action>() }
@@ -216,6 +218,8 @@ fun MainScreen(
         focusPoint.value = null
         initialOffset = Offset.Zero
         generalOffset = Offset.Zero
+        viewModel.updateLines(lineList.toList())
+        viewModel.triggerSave()
     }
 
     Box(
@@ -256,6 +260,9 @@ fun MainScreen(
                         } else {
                             focused.thickness = newSettings.thickness
                             focused.color = newSettings.color
+
+                            focused.customUnit = newSettings.customUnit
+                            focused.customCoefficient = newSettings.customCoefficient
                         }
                         inheritType = InheritType.NONE
                         inheritPicker = null

@@ -4,5 +4,6 @@ import android.graphics.Bitmap
 
 data class Project (
     val name: String,
-    val image: Bitmap
+    val image: Bitmap,
+    val objects: List<Line>
 )

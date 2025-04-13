@@ -37,6 +37,8 @@ fun SureToInherit(
 ) {
     val colorInh = remember { mutableStateOf(true) }
     val thicknessInh = remember { mutableStateOf(true) }
+    val customUnitInh = remember { mutableStateOf(true) }
+    val customCoefficientInh = remember { mutableStateOf(true) }
 
     Dialog(
         onDismissRequest = { onCancel() }
@@ -61,6 +63,8 @@ fun SureToInherit(
 
                     Option(colorInh, "Цвет")
                     Option(thicknessInh, "Толщина")
+                    lineFrom.customUnit?.let { Option(customUnitInh, "Ед. Измерения") }
+                    lineFrom.customCoefficient?.let { Option(customCoefficientInh, "Коофициент размера") }
                 }
 
                 Row {
@@ -84,6 +88,8 @@ fun SureToInherit(
                             val newSettings = LineSettings()
                             if (thicknessInh.value) newSettings.thickness = lineFrom.thickness
                             if (colorInh.value) newSettings.color = lineFrom.color
+                            if (customUnitInh.value) newSettings.customUnit = lineFrom.customUnit
+                            if (customCoefficientInh.value) newSettings.customCoefficient = lineFrom.customCoefficient
                             onInherit(newSettings)
                         },
                         colors = Palette.buttonColors(palette.primary)
