@@ -31,27 +31,25 @@ fun drawAllOnBitmap(
 }
 
 fun drawAllAndExport(
-    bitmap: Bitmap?,
+    bitmap: Bitmap,
     lineList: List<Line>,
 
     context: Context,
     folder: String = "ArrowDrawerResult"
 ) {
-    bitmap?.let {
-        val displayMetrics = context.resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-        val scaleC: Float = screenWidth.toFloat() / bitmap.width
+    val displayMetrics = context.resources.displayMetrics
+    val screenWidth = displayMetrics.widthPixels
+    val scaleC: Float = screenWidth.toFloat() / bitmap.width
 
-        val bt = drawAllOnBitmap(
-            bitmap,
-            lineList,
-            scaleC
-        )
+    val bt = drawAllOnBitmap(
+        bitmap,
+        lineList,
+        scaleC
+    )
 
-        saveImage(
-            bt,
-            context,
-            folder
-        )
-    }
+    saveImage(
+        bt,
+        context,
+        folder
+    )
 }

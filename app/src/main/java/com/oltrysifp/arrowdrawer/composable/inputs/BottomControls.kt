@@ -35,14 +35,12 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun BottomControls(
-    isLoaded: Boolean,
     actionStack: List<Action>,
     focusedLine: Line?,
     drawMode: Boolean,
 
     onUndo: () -> Unit,
     onEdit: () -> Unit,
-    onLoad: () -> Unit,
     onExport: () -> Unit,
     onSettings: () -> Unit,
     onAdd: () -> Unit
@@ -54,124 +52,111 @@ fun BottomControls(
         isExported = false
     }
 
-    AnimatedContent(
-        isLoaded,
-        label = "button"
+    Row(
+        Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
     ) {
-        if (!it) {
-            DefaultButton(
-                onClick = onLoad
-            ) {
-                Text("Выбрать изображение")
-            }
-        } else {
-            Row(
-                Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Row(
-                    verticalAlignment = Alignment.Bottom
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Column {
+                AnimatedVisibility(
+                    actionStack.isNotEmpty()
                 ) {
-                    Column {
-                        AnimatedVisibility(
-                            actionStack.isNotEmpty()
-                        ) {
-                            IconButton(
-                                onClick = { onUndo() },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = palette.primary
-                                )
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.undo),
-                                    "undo",
-                                    tint = palette.onPrimary
-                                )
-                            }
-                        }
-
-                        IconButton(
-                            onClick = {
-                                onSettings()
-                            },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = palette.primary
-                            )
-                        ) {
-                            Icon(
-                                Icons.Filled.Settings,
-                                "settings",
-                                tint = palette.onPrimary
-                            )
-                        }
-                    }
-
                     IconButton(
-                        onClick = { onAdd() },
-                        colors = if (!drawMode) IconButtonDefaults.iconButtonColors(
-                            containerColor = palette.primary
-                        ) else IconButtonDefaults.iconButtonColors(
-                            containerColor = palette.background,
-                        )
-                    ) {
-                        Icon(
-                            Icons.Filled.Add,
-                            "add",
-                            tint = if (!drawMode) palette.onPrimary else palette.onBackground,
-                        )
-                    }
-
-                    HSpacer(2.dp)
-
-                    if (focusedLine != null) {
-                        val length = focusedLine.mutatedLength()
-                        val lengthText = if (length < 10) "%.2f".format(length) else length.toInt().toString()
-
-                        DefaultButton(
-                            onClick = {
-                                onEdit()
-                            }
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.arrow),
-                                "arrow",
-                                modifier = Modifier.size(19.dp)
-                            )
-
-                            HSpacer(2.dp)
-
-                            Text(
-                                lengthText,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-                }
-
-                Row {
-                    IconButton(
-                        onClick = {
-                            onExport()
-                            isExported = true
-                        },
+                        onClick = { onUndo() },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = palette.primary
                         )
                     ) {
-                        AnimatedContent(
-                            isExported,
-                            label = "exported"
-                        ) { isExported ->
-                            Icon(
-                                painterResource(if (isExported) R.drawable.download_done else R.drawable.download),
-                                "download",
-                                tint = palette.onPrimary
-                            )
-                        }
+                        Icon(
+                            painterResource(R.drawable.undo),
+                            "undo",
+                            tint = palette.onPrimary
+                        )
                     }
+                }
+
+                IconButton(
+                    onClick = {
+                        onSettings()
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = palette.primary
+                    )
+                ) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        "settings",
+                        tint = palette.onPrimary
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = { onAdd() },
+                colors = if (!drawMode) IconButtonDefaults.iconButtonColors(
+                    containerColor = palette.primary
+                ) else IconButtonDefaults.iconButtonColors(
+                    containerColor = palette.background,
+                )
+            ) {
+                Icon(
+                    Icons.Filled.Add,
+                    "add",
+                    tint = if (!drawMode) palette.onPrimary else palette.onBackground,
+                )
+            }
+
+            HSpacer(2.dp)
+
+            if (focusedLine != null) {
+                val length = focusedLine.mutatedLength()
+                val lengthText = if (length < 10) "%.2f".format(length) else length.toInt().toString()
+
+                DefaultButton(
+                    onClick = {
+                        onEdit()
+                    }
+                ) {
+                    Icon(
+                        painterResource(R.drawable.arrow),
+                        "arrow",
+                        modifier = Modifier.size(19.dp)
+                    )
+
+                    HSpacer(2.dp)
+
+                    Text(
+                        lengthText,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+
+        Row {
+            IconButton(
+                onClick = {
+                    onExport()
+                    isExported = true
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = palette.primary
+                )
+            ) {
+                AnimatedContent(
+                    isExported,
+                    label = "exported"
+                ) { isExported ->
+                    Icon(
+                        painterResource(if (isExported) R.drawable.download_done else R.drawable.download),
+                        "download",
+                        tint = palette.onPrimary
+                    )
                 }
             }
         }
