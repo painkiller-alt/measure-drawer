@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineBoxProperties
+import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable

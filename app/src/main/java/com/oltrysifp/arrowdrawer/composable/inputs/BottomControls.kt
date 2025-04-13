@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,12 +38,14 @@ fun BottomControls(
     isLoaded: Boolean,
     actionStack: List<Action>,
     focusedLine: Line?,
+    drawMode: Boolean,
 
     onUndo: () -> Unit,
     onEdit: () -> Unit,
     onLoad: () -> Unit,
     onExport: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onAdd: () -> Unit
 ) {
     var isExported by remember { mutableStateOf(false) }
 
@@ -106,7 +109,22 @@ fun BottomControls(
                         }
                     }
 
-                    HSpacer(4.dp)
+                    IconButton(
+                        onClick = { onAdd() },
+                        colors = if (!drawMode) IconButtonDefaults.iconButtonColors(
+                            containerColor = palette.primary
+                        ) else IconButtonDefaults.iconButtonColors(
+                            containerColor = palette.background,
+                        )
+                    ) {
+                        Icon(
+                            Icons.Filled.Add,
+                            "add",
+                            tint = if (!drawMode) palette.onPrimary else palette.onBackground,
+                        )
+                    }
+
+                    HSpacer(2.dp)
 
                     if (focusedLine != null) {
                         val length = focusedLine.mutatedLength()

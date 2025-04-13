@@ -100,6 +100,7 @@ fun MainScreen() {
     var generalOffset by remember { mutableStateOf(Offset.Zero) }
 
     var isDragging by remember { mutableStateOf(false) }
+    var drawMode by remember { mutableStateOf(false) }
 
     val canvasSettings = remember { mutableStateOf(LineSettings()) }
 
@@ -144,11 +145,11 @@ fun MainScreen() {
         generalOffset = offset
     }
 
-    val onDrag = { event: PointerEvent, fingersCount: Int ->
+    val onDrag = { event: PointerEvent ->
         val pan = event.calculatePan()
         val zoom = event.calculateZoom()
 
-        if (fingersCount < 2) {
+        if (drawMode) {
             generalOffset += pan
 
             val deltaOffset = Offset(
@@ -182,13 +183,12 @@ fun MainScreen() {
             }
         } else {
             val centroid = event.calculateCentroid()
-
-            val newScale = (zoom * zoomState.value.scale).coerceIn(imageMinScale, Constants.MAX_ZOOM)
-            val newOffset = Offset(
-                zoomState.value.offset.x + -pan.x * newScale + (newScale - zoomState.value.scale) * centroid.x,
-                zoomState.value.offset.y + -pan.y * newScale + (newScale - zoomState.value.scale) * centroid.y,
-            )
-            if (newOffset != Offset.Unspecified) {
+            if (centroid != Offset.Unspecified) {
+                val newScale = (zoom * zoomState.value.scale).coerceIn(imageMinScale, Constants.MAX_ZOOM)
+                val newOffset = Offset(
+                    zoomState.value.offset.x + -pan.x * newScale + (newScale - zoomState.value.scale) * centroid.x,
+                    zoomState.value.offset.y + -pan.y * newScale + (newScale - zoomState.value.scale) * centroid.y,
+                )
                 val newZoom = zoomState.value.copy(
                     scale = newScale,
                     offset = newOffset
@@ -273,20 +273,18 @@ fun MainScreen() {
 
                             do {
                                 val event = awaitPointerEvent()
-                                val fingersCount = event.changes.count()
                                 val canceled = event.changes.fastAny { it.isConsumed }
 
                                 if (!canceled) {
                                     if (!isDragging) {
                                         isDragging = true
-                                        if (fingersCount < 2) {
+                                        if (drawMode) {
                                             offset += event.calculatePan()
                                             onDragStart(offset)
                                         }
                                     } else {
                                         onDrag(
-                                            event,
-                                            fingersCount
+                                            event
                                         )
                                     }
 
@@ -299,6 +297,7 @@ fun MainScreen() {
 
                                 if (canceled || event.changes.fastAll { !it.pressed }) {
                                     isDragging = false // Drag ended
+                                    drawMode = false
                                     onDragEnd()
                                 }
                             } while (isDragging)
@@ -329,6 +328,7 @@ fun MainScreen() {
         DrawAllOnScreen(lineList, zoomState)
 
         for (line in lineList) {
+            log(line)
             AttachControlsToLine(
                 line,
                 zoomState,
@@ -352,6 +352,7 @@ fun MainScreen() {
                 imageLoaded,
                 actionStack,
                 focusedLine,
+                drawMode,
 
                 onUndo = {
                     val lastIndex = actionStack.lastIndex
@@ -378,6 +379,9 @@ fun MainScreen() {
                 },
                 onSettings = {
                     settingsOpened = true
+                },
+                onAdd = {
+                    drawMode = !drawMode
                 }
             )
         }
