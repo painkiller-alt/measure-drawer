@@ -36,7 +36,6 @@ import com.oltrysifp.arrowdrawer.composable.arrowSettings.ColorPicker
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ThicknessPicker
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.util.Palette
-import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable

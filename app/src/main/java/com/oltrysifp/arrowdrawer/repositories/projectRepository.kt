@@ -7,7 +7,6 @@ import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineDto
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.models.ProjectMeta
-import com.oltrysifp.arrowdrawer.util.log
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream

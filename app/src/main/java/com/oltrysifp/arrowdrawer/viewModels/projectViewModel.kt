@@ -1,6 +1,5 @@
 package com.oltrysifp.arrowdrawer.viewModels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -15,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
 class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() {
     private val _projects = MutableStateFlow<List<Project>>(emptyList())
