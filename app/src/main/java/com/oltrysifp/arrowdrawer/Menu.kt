@@ -9,26 +9,43 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,10 +66,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oltrysifp.arrowdrawer.composable.EdgeToEdgeConfig
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.composable.VSpacer
+import com.oltrysifp.arrowdrawer.composable.inputs.TextFieldDefault
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.repositories.ProjectRepository
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
+import com.oltrysifp.arrowdrawer.util.Palette
 import com.oltrysifp.arrowdrawer.util.bitmap.loadBitmapFromUri
+import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.util.palette
 import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModel
 import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModelFactory
@@ -67,6 +87,8 @@ class Menu : ComponentActivity() {
             val repository = remember { ProjectRepository(mContext) }
             val viewModelFactory = remember { ProjectViewModelFactory(repository) }
             val viewModel: ProjectViewModel = viewModel(factory = viewModelFactory)
+
+            val isSaving = viewModel.isSaving.collectAsState()
 
             var imageUri: Uri? by remember { mutableStateOf(null) }
             var bitmap by remember(imageUri) { mutableStateOf<Bitmap?>(null) }
@@ -99,16 +121,10 @@ class Menu : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     floatingActionButton = {
-                        FloatingActionButton(
-                            onClick = { askImage() },
-                            containerColor = if (imageUri != null) palette.cancel else palette.primary
-                        ) {
-                            Icon(
-                                Icons.Filled.Add,
-                                "Create project",
-                                tint = palette.onPrimary
-                            )
-                        }
+                        AddButton(
+                            isSaving.value,
+                            askImage
+                        )
                     }
                 ) { innerPadding ->
                     Box(
@@ -132,21 +148,35 @@ fun MenuScreen(
 
     val projects by viewModel.projects.collectAsState()
 
-    Column(
+    LazyColumn(
         modifier = Modifier
-            .padding(horizontal = 10.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(horizontal = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        VSpacer(4.dp)
+        item(key = "spacer") { VSpacer(4.dp) }
 
-        projects.forEach {
-            ProjectCard(it) {
-                val intent = Intent(mContext, MainActivity::class.java)
-                val b = Bundle()
-                b.putString("project", it.name)
-                intent.putExtras(b)
-                mContext.startActivity(intent)
+        items(projects, key = {
+            "project ${it.name}"
+        }) {
+            Box(
+                Modifier.animateItem()
+            ) {
+                ProjectCard(
+                    it,
+                    onOpen = {
+                        val intent = Intent(mContext, MainActivity::class.java)
+                        val b = Bundle()
+                        b.putString("project", it.name)
+                        intent.putExtras(b)
+                        mContext.startActivity(intent)
+                    },
+                    onEdit = { project ->
+                        viewModel.renameProject(it.name, project.name)
+                    },
+                    onDelete = {
+                        viewModel.deleteProject(it.name)
+                    }
+                )
             }
         }
     }
@@ -155,13 +185,21 @@ fun MenuScreen(
 @Composable
 fun ProjectCard(
     project: Project,
-    onOpen: () -> Unit
+    onOpen: () -> Unit,
+    onEdit: (Project) -> Unit,
+    onDelete: () -> Unit
 ) {
+    var editMode by remember { mutableStateOf(false) }
+
+    val projectName = remember { mutableStateOf(project.name) }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = palette.onSurface
+            containerColor = palette.surface
         ),
         onClick = onOpen
     ) {
@@ -171,26 +209,143 @@ fun ProjectCard(
                 horizontal = 10.dp
             )
         ) {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
+            AnimatedVisibility(
+                !editMode
             ) {
-                Image(
-                    project.image.asImageBitmap(),
-                    "image",
-                    contentScale = ContentScale.Crop
-                )
+                Box(
+                    modifier = Modifier
+                        .padding(end = 12.dp)
+                        .size(100.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        project.image.asImageBitmap(),
+                        "image",
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
 
-            HSpacer(6.dp)
+            AnimatedContent(
+                editMode,
+                label = "editMode"
+            ) { isEdit ->
+                if (!isEdit) {
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            project.name,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.W500,
+                            modifier = Modifier.weight(1f)
+                        )
 
-            Text(
-                project.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.W500
-            )
+                        HSpacer(10.dp)
+
+                        IconButton(
+                            onClick = {
+                                editMode = true
+                            }
+                        ) {
+                            Icon(
+                                Icons.Filled.Edit,
+                                "edit"
+                            )
+                        }
+                    }
+                } else {
+                    Column() {
+                        TextFieldDefault(
+                            projectName,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        VSpacer(2.dp)
+
+                        Row(
+                            Modifier
+                                .fillMaxSize(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Row {
+                                IconButton(
+                                    onClick = {
+                                        editMode = false
+                                        onEdit(project.copy(
+                                            name = projectName.value
+                                        ))
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Done,
+                                        "done"
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        editMode = false
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Close,
+                                        "close"
+                                    )
+                                }
+                            }
+
+                            IconButton(
+                                onClick = onDelete
+                            ) {
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    "delete"
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AddButton(
+    isSaving: Boolean,
+    onAdd: () -> Unit
+) {
+    FloatingActionButton(
+        onClick = {
+            if (!isSaving) {
+                onAdd()
+            }
+        },
+        containerColor = if (isSaving) palette.cancel else palette.primary
+    ) {
+        Box(
+            Modifier.size(40.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!isSaving) {
+                Icon(
+                    Icons.Filled.Add,
+                    "Create project",
+                    tint = palette.onPrimary
+                )
+            } else {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 1.dp,
+                    color = palette.primary,
+                    trackColor = palette.onSurface,
+                )
+            }
         }
     }
 }

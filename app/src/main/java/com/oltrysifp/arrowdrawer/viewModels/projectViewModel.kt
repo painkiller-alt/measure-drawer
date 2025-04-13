@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() {
     private val _projects = MutableStateFlow<List<Project>>(emptyList())
@@ -25,6 +26,9 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
 
     private val _currentLines = MutableStateFlow<List<Line>>(emptyList())
     val currentLines = _currentLines.asStateFlow()
+
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving = _isSaving.asStateFlow()
 
     private val saveTrigger = MutableStateFlow(false)
 
@@ -46,11 +50,13 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
     }
 
     fun createProject(project: Project) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isSaving.value = true
             if (repository.saveProject(project)) {
                 loadProjectsList()
                 _currentProject.value = project
             }
+            _isSaving.value = false
         }
     }
 
@@ -84,6 +90,20 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
         }
     }
 
+    fun renameProject(oldName: String, newName: String) {
+        viewModelScope.launch {
+            if (repository.renameProject(oldName, newName)) {
+                // If the current project is the one being renamed, update it
+                _currentProject.value?.let { project ->
+                    if (project.name == oldName) {
+                        _currentProject.value = project.copy(name = newName)
+                    }
+                }
+                loadProjectsList() // Refresh list of project names
+            }
+        }
+    }
+
     fun updateLines(lines: List<Line>) {
         _currentLines.value = lines
     }
@@ -95,6 +115,7 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
     private fun loadProjectsList() {
         viewModelScope.launch {
             _projects.value = repository.listProjects()
+                .sortedByDescending { it.lastEdit }
         }
     }
 }

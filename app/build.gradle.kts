@@ -14,8 +14,8 @@ android {
         applicationId = "com.oltrysifp.arrowdrawer"
         minSdk = 28
         targetSdk = 35
-        versionCode = 2
-        versionName = "beta_1.0a"
+        versionCode = 3
+        versionName = "beta_1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -58,6 +58,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.animation)
 }

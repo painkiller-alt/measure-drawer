@@ -63,20 +63,6 @@ object Palette {
         disabledIndicatorColor = Color.Transparent,
         unfocusedIndicatorColor = Color.Transparent,
     )
-
-    @Composable
-    fun textFieldDisabled(
-        container: Color = palette.surface
-    ) = TextFieldDefaults.colors(
-        focusedContainerColor = container,
-        disabledContainerColor = container,
-        unfocusedContainerColor = container,
-
-        focusedIndicatorColor = Color.Transparent,
-        errorIndicatorColor = Color.Transparent,
-        disabledIndicatorColor = Color.Transparent,
-        unfocusedIndicatorColor = Color.Transparent,
-    )
 }
 
 val LocalCustomColorsPalette = staticCompositionLocalOf { Palette.CustomColorsPalette() }

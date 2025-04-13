@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineDto
 import com.oltrysifp.arrowdrawer.models.Project
+import com.oltrysifp.arrowdrawer.models.ProjectMeta
+import com.oltrysifp.arrowdrawer.util.log
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
@@ -47,6 +49,11 @@ class ProjectRepository(context: Context) {
                 return false
             }
 
+            val metaFile = File(projectDir, "meta.json")
+            metaFile.writeText(
+                json.encodeToString(ProjectMeta(project.lastEdit))
+            )
+
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -66,7 +73,14 @@ class ProjectRepository(context: Context) {
             val objects = json.decodeFromString<List<LineDto>>(objectsFile.readText())
                 .map { Line.fromDto(it) }
 
-            Project(name, image, objects)
+            val metaFile = File(projectDir, "meta.json")
+            val lastEdit = if (metaFile.exists()) {
+                json.decodeFromString<ProjectMeta>(metaFile.readText()).lastEdit
+            } else {
+                0L
+            }
+
+            Project(name, image, objects, lastEdit)
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -83,6 +97,23 @@ class ProjectRepository(context: Context) {
     fun deleteProject(name: String): Boolean {
         return try {
             File(projectsDir, name).deleteRecursively()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun renameProject(oldName: String, newName: String): Boolean {
+        return try {
+            val oldDir = File(projectsDir, oldName)
+            val newDir = File(projectsDir, newName)
+
+            if (!oldDir.exists() || newDir.exists()) {
+                // Can't rename if old doesn't exist or new already exists
+                return false
+            }
+
+            oldDir.renameTo(newDir)
         } catch (e: Exception) {
             e.printStackTrace()
             false
