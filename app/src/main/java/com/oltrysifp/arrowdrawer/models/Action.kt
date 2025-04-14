@@ -33,3 +33,22 @@ fun undoAction(
         focusedSetter(action.startLine)
     }
 }
+
+fun redoAction(
+    action: Action,
+    lineList: MutableList<Line>,
+    focusedLine: Line?,
+    focusedSetter: (Line?) -> Unit
+) {
+    if (action is DeleteAction) {
+        lineList.removeIf { it.hash == action.line.hash }
+        focusedSetter(null)
+    } else if (action is AddAction) {
+        lineList.add(action.line)
+        if (focusedLine == null) { focusedSetter(action.line) }
+    } else if (action is ChangeAction) {
+        val index = lineList.indexOfFirst { it.hash == action.startLine.hash }
+        lineList[index] = action.endLine
+        focusedSetter(action.endLine)
+    }
+}

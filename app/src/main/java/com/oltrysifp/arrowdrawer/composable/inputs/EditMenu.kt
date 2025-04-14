@@ -34,6 +34,7 @@ import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.composable.VSpacer
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ColorPicker
+import com.oltrysifp.arrowdrawer.composable.arrowSettings.FontSizePicker
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ThicknessPicker
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.util.Palette
@@ -58,6 +59,7 @@ fun EditMenu(
 
     val color = remember { mutableStateOf(line.color) }
     val thickness = remember { mutableFloatStateOf(line.thickness) }
+    val fontSize = remember { mutableFloatStateOf(line.fontSize) }
 
     fun getNewLine(): Line {
         val newLine = line.copy()
@@ -74,6 +76,7 @@ fun EditMenu(
 
         newLine.color = color.value
         newLine.thickness = thickness.floatValue
+        newLine.fontSize = fontSize.floatValue
 
         val cu = customUnit.value
         if (cu != "") {
@@ -204,9 +207,13 @@ fun EditMenu(
 
                     ColorPicker(color)
 
-                    VSpacer(4.dp)
+                    VSpacer(6.dp)
 
                     ThicknessPicker(thickness)
+
+                    VSpacer(6.dp)
+
+                    FontSizePicker(fontSize)
 
                     VSpacer(4.dp)
 

@@ -74,7 +74,7 @@ fun CentralContent(
         ) {
             Text(
                 lengthText + unitText,
-                fontSize = 11.sp,
+                fontSize = line.fontSize.sp,
                 lineHeight = 16.sp,
                 color = palette.onImage,
                 modifier = Modifier.padding(horizontal = 4.dp)

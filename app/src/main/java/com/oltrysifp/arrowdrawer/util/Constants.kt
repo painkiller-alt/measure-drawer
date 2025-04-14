@@ -16,5 +16,8 @@ object Constants {
     const val MIN_THICKNESS = 1f
     const val MAX_THICKNESS = 10f
 
+    const val MIN_FONT = 8f
+    const val MAX_FONT = 22f
+
     const val OFFSET_THRESHOLD = 50f
 }

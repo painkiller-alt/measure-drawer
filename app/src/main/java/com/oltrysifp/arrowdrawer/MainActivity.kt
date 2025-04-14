@@ -60,10 +60,12 @@ import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.models.enums.InheritType
+import com.oltrysifp.arrowdrawer.models.redoAction
 import com.oltrysifp.arrowdrawer.models.undoAction
 import com.oltrysifp.arrowdrawer.repositories.ProjectRepository
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
 import com.oltrysifp.arrowdrawer.util.Constants
+import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModel
 import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModelFactory
 import kotlin.math.abs
@@ -137,6 +139,7 @@ fun MainScreen(
     val focusPoint = remember { mutableStateOf<Offset?>(null) }
     var focusedLine by remember { mutableStateOf<Line?>(null) }
     val actionStack = remember { mutableStateListOf<Action>() }
+    val redoStack = remember { mutableStateListOf<Action>() }
 
     var editOpened by remember { mutableStateOf(false) }
     var settingsOpened by remember { mutableStateOf(false) }
@@ -157,6 +160,7 @@ fun MainScreen(
     }
 
     val onDragStart = { offset: Offset ->
+        redoStack.clear()
         initialOffset = offset
         generalOffset = offset
     }
@@ -185,7 +189,8 @@ fun MainScreen(
                         customUnit = canvasSettings.value.customUnit,
 
                         color = canvasSettings.value.color,
-                        thickness = canvasSettings.value.thickness
+                        thickness = canvasSettings.value.thickness,
+                        fontSize = canvasSettings.value.fontSize
                     )
                     lineList.add(newLine)
                     actionStack.add(AddAction(newLine))
@@ -369,14 +374,26 @@ fun MainScreen(
 
             BottomControls(
                 actionStack,
+                redoStack,
                 focusedLine,
                 drawMode,
 
                 onUndo = {
                     val lastIndex = actionStack.lastIndex
                     if (lastIndex != -1) {
-                        undoAction(actionStack[lastIndex], lineList, focusedLine) { focusedLine = it }
+                        val actionToUndo = actionStack[lastIndex]
+                        undoAction(actionToUndo, lineList, focusedLine) { focusedLine = it }
                         actionStack.removeAt(lastIndex)
+                        redoStack.add(actionToUndo)
+                    }
+                },
+                onRedo = {
+                    val lastIndex = redoStack.lastIndex
+                    if (lastIndex != -1) {
+                        val actionToRedo = redoStack[lastIndex]
+                        redoAction(actionToRedo, lineList, focusedLine) { focusedLine = it }
+                        redoStack.removeAt(lastIndex)
+                        actionStack.add(actionToRedo)
                     }
                 },
                 onEdit = { editOpened = true },

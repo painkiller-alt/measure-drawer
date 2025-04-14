@@ -1,30 +1,27 @@
 package com.oltrysifp.arrowdrawer.composable.arrowSettings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableFloatState
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.oltrysifp.arrowdrawer.util.Constants
 import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
-fun ThicknessPicker(
-    thickness: MutableFloatState
+fun FontSizePicker(
+    fontSize: MutableFloatState
 ) {
     Column {
         Text(
-            "Толщина"
+            "Размер шрифта"
         )
 
         Slider(
-            value = thickness.floatValue / Constants.MAX_THICKNESS,
+            value = (fontSize.floatValue-Constants.MIN_FONT) / Constants.MAX_FONT,
             onValueChange = {
-                thickness.floatValue = it * Constants.MAX_THICKNESS
+                fontSize.floatValue = (it * Constants.MAX_FONT)+Constants.MIN_FONT
             },
             colors = SliderDefaults.colors(
                 thumbColor = palette.primary,

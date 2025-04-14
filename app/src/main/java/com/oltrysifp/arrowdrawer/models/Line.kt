@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.sp
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -17,6 +18,7 @@ class Line(
     end: Offset,
     thickness: Float = 5f,
     color: Color = Color.Green,
+    fontSize: Float = 11f,
 
     customCoefficient: Float? = null,
     customSize: Int? = null,
@@ -28,6 +30,7 @@ class Line(
     var end by mutableStateOf(end)
     var thickness by mutableFloatStateOf(thickness)
     var color by mutableStateOf(color)
+    var fontSize by mutableStateOf(fontSize)
 
     var customCoefficient by mutableStateOf(customCoefficient)
     var customSize by mutableStateOf(customSize)
@@ -38,6 +41,7 @@ class Line(
         end: Offset = this.end,
         thickness: Float = this.thickness,
         color: Color = this.color,
+        fontSize: Float = this.fontSize,
         customCoefficient: Float? = this.customCoefficient,
         customSize: Int? = this.customSize,
         customUnit: String? = this.customUnit,
@@ -48,6 +52,7 @@ class Line(
             end,
             thickness,
             color,
+            fontSize,
             customCoefficient,
             customSize,
             customUnit,
@@ -62,6 +67,7 @@ class Line(
         this.end = line.end
         this.color = line.color
         this.thickness = line.thickness
+        this.fontSize = line.fontSize
 
         this.customUnit = line.customUnit
         this.customSize = line.customSize
@@ -118,6 +124,7 @@ class Line(
         endY = end.y,
         thickness = thickness,
         color = color.toArgb(),
+        fontSize = fontSize,
         customCoefficient = customCoefficient,
         customSize = customSize,
         customUnit = customUnit,
@@ -131,6 +138,7 @@ class Line(
             end = Offset(dto.endX, dto.endY),
             thickness = dto.thickness,
             color = Color(dto.color),
+            fontSize = dto.fontSize,
             customCoefficient = dto.customCoefficient,
             customSize = dto.customSize,
             customUnit = dto.customUnit,
@@ -148,6 +156,7 @@ data class LineDto(
     val endY: Float,
     val thickness: Float,
     val color: Int,
+    val fontSize: Float,
     val customCoefficient: Float?,
     val customSize: Int?,
     val customUnit: String?,

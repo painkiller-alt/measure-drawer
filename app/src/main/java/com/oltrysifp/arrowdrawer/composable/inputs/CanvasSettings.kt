@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.oltrysifp.arrowdrawer.composable.VSpacer
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ColorPicker
+import com.oltrysifp.arrowdrawer.composable.arrowSettings.FontSizePicker
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ThicknessPicker
 import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.util.Palette
@@ -43,6 +44,7 @@ fun CanvasSettings(
 ) {
     val color = remember { mutableStateOf(canvasSettings.value.color) }
     val thickness = remember { mutableFloatStateOf(canvasSettings.value.thickness) }
+    val fontSize = remember { mutableFloatStateOf(canvasSettings.value.fontSize) }
 
     Box(
         Modifier
@@ -77,7 +79,8 @@ fun CanvasSettings(
                                 onExit(
                                     LineSettings(
                                         color = color.value,
-                                        thickness = thickness.floatValue
+                                        thickness = thickness.floatValue,
+                                        fontSize = fontSize.floatValue
                                     )
                                 )
                             }
@@ -93,9 +96,13 @@ fun CanvasSettings(
 
                     ColorPicker(color)
 
-                    VSpacer(4.dp)
+                    VSpacer(6.dp)
 
                     ThicknessPicker(thickness)
+
+                    VSpacer(6.dp)
+
+                    FontSizePicker(fontSize)
 
                     VSpacer(4.dp)
 
