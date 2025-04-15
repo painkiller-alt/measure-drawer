@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -20,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,8 +34,10 @@ import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.models.Action
 import com.oltrysifp.arrowdrawer.models.Line
+import com.oltrysifp.arrowdrawer.models.enums.ExportState
 import com.oltrysifp.arrowdrawer.util.palette
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun BottomControls(
@@ -45,15 +49,17 @@ fun BottomControls(
     onUndo: () -> Unit,
     onRedo: () -> Unit,
     onEdit: () -> Unit,
-    onExport: () -> Unit,
+    onExport: suspend () -> Unit,
     onSettings: () -> Unit,
     onAdd: () -> Unit
 ) {
-    var isExported by remember { mutableStateOf(false) }
+    var exportState by remember { mutableStateOf(ExportState.IDLE) }
 
-    LaunchedEffect(isExported) {
-        delay(2000)
-        isExported = false
+    LaunchedEffect(exportState) {
+        if (exportState == ExportState.DONE) {
+            delay(2000)
+            exportState = ExportState.IDLE
+        }
     }
 
     Column(
@@ -164,24 +170,38 @@ fun BottomControls(
                 }
             }
 
+            val exportCoroutine = rememberCoroutineScope()
             IconButton(
                 onClick = {
-                    onExport()
-                    isExported = true
+                    exportCoroutine.launch {
+                        exportState = ExportState.SAVING
+                        onExport()
+                        exportState = ExportState.DONE
+                    }
                 },
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = palette.primary
                 )
             ) {
                 AnimatedContent(
-                    isExported,
+                    exportState,
                     label = "exported"
-                ) { isExported ->
-                    Icon(
-                        painterResource(if (isExported) R.drawable.download_done else R.drawable.download),
-                        "download",
-                        tint = palette.onPrimary
-                    )
+                ) { exportState ->
+                    if (exportState == ExportState.SAVING) {
+                        CircularProgressIndicator(
+                            color = palette.onPrimary,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Icon(
+                            painterResource(
+                                if (exportState == ExportState.DONE) R.drawable.download_done else R.drawable.download
+                            ),
+                            "download",
+                            tint = palette.onPrimary
+                        )
+                    }
                 }
             }
         }

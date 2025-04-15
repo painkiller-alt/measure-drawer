@@ -65,7 +65,6 @@ import com.oltrysifp.arrowdrawer.models.undoAction
 import com.oltrysifp.arrowdrawer.repositories.ProjectRepository
 import com.oltrysifp.arrowdrawer.ui.theme.ArrowDrawerTheme
 import com.oltrysifp.arrowdrawer.util.Constants
-import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModel
 import com.oltrysifp.arrowdrawer.viewModels.ProjectViewModelFactory
 import kotlin.math.abs
@@ -117,6 +116,7 @@ fun MainScreen(
     viewModel: ProjectViewModel = viewModel()
 ) {
     val mContext = LocalContext.current
+    val activity = (mContext as? ComponentActivity) ?: return
 
     val bitmap = project.image
 
@@ -370,8 +370,6 @@ fun MainScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
         ) {
-            val saveContext = LocalContext.current
-
             BottomControls(
                 actionStack,
                 redoStack,
@@ -401,8 +399,8 @@ fun MainScreen(
                     drawAllAndExport(
                         bitmap,
                         lineList,
-
-                        saveContext
+                        mContext,
+                        activity
                     )
                 },
                 onSettings = { settingsOpened = true },

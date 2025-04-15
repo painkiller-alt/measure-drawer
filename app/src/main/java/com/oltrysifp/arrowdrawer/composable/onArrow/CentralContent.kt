@@ -3,7 +3,6 @@ package com.oltrysifp.arrowdrawer.composable.onArrow
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -18,16 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.models.LineBoxProperties
+import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
 fun CentralContent(
-    properties: LineBoxProperties,
     line: Line,
     screenImageScale: Float,
     onFocus: () -> Unit
@@ -42,16 +39,12 @@ fun CentralContent(
         else -> (length / 200)*screenImageScale
     }
 
+    var width by remember { mutableIntStateOf(0) }
     var height by remember { mutableIntStateOf(0) }
+
 
     Row(
         Modifier
-            .offset {
-                IntOffset(
-                    x = - properties.width/2,
-                    y = - height/2
-                )
-            }
             .clip(RoundedCornerShape(8.dp))
             .clickable { onFocus() }
     ) {
@@ -63,6 +56,9 @@ fun CentralContent(
             modifier = Modifier
                 .onGloballyPositioned {
                     height = it.size.height
+                    width = it.size.width
+
+                    log(width)
                 }
                 .scale(cardSize)
                 .padding(6.dp)

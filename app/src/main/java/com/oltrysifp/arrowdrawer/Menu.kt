@@ -248,7 +248,7 @@ fun ProjectCard(
                         }
                     }
                 } else {
-                    Column() {
+                    Column {
                         TextFieldDefault(
                             projectName,
                             modifier = Modifier.fillMaxWidth()

@@ -1,7 +1,6 @@
 package com.oltrysifp.arrowdrawer.composable.onArrow
 
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Surface
@@ -23,7 +22,6 @@ import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
 fun MoveNode(
-    focusedLine: Line?,
     line: Line,
     focusPoint: MutableState<Offset?>,
     scale: Float,
@@ -32,43 +30,37 @@ fun MoveNode(
 ) {
     var startPos by remember { mutableStateOf(line) }
 
-    if (focusedLine == line) {
-        Surface(
-            modifier = Modifier
-                .size(30.dp)
-                .offset(
-                    y = (-15).dp,
-                    x = (-15).dp
-                )
-                .pointerInput(line, scale) {
-                    detectDragGestures(
-                        onDragStart = {
-                            startPos = line.copy()
-                        },
-                        onDrag = { _, dragAmount ->
-                            if (pos == NodePosition.START) {
-                                line.start += dragAmount / scale
-                                focusPoint.value = line.start
-                            } else {
-                                line.end += dragAmount / scale
-                                focusPoint.value = line.end
-                            }
-                        },
-                        onDragEnd = {
-                            focusPoint.value = null
-                            actionStack.add(
-                                ChangeAction(
-                                    startPos,
-                                    line
-                                )
-                            )
+    Surface(
+        modifier = Modifier
+            .size(30.dp)
+            .pointerInput(line, scale) {
+                detectDragGestures(
+                    onDragStart = {
+                        startPos = line.copy()
+                    },
+                    onDrag = { _, dragAmount ->
+                        if (pos == NodePosition.START) {
+                            line.start += dragAmount / scale
+                            focusPoint.value = line.start
+                        } else {
+                            line.end += dragAmount / scale
+                            focusPoint.value = line.end
                         }
-                    )
-                },
-            color = palette.secondary,
-            shape = CircleShape
-        ) {
+                    },
+                    onDragEnd = {
+                        focusPoint.value = null
+                        actionStack.add(
+                            ChangeAction(
+                                startPos,
+                                line
+                            )
+                        )
+                    }
+                )
+            },
+        color = palette.secondary,
+        shape = CircleShape
+    ) {
 
-        }
     }
 }
