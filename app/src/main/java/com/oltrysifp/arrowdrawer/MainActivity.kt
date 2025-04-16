@@ -1,5 +1,6 @@
 package com.oltrysifp.arrowdrawer
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -119,8 +120,6 @@ fun MainScreen(
 
     val canvasSettings by viewModel.canvasSettings.collectAsState()
 
-    val bitmap = project.image
-
     val lineList = remember { mutableStateListOf<Line>() }
     LaunchedEffect(Unit) {
         lineList.clear() // clear existing lines
@@ -148,14 +147,16 @@ fun MainScreen(
 
     var imageMinScale by remember { mutableFloatStateOf(0.75f) }
 
+    var bitmap: Bitmap? by remember { mutableStateOf(null) }
     LaunchedEffect(Unit) {
         val displayMetrics = mContext.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         zoomState.value = zoomState.value.copy(
-            scale = screenWidth.toFloat() / bitmap.width,
+            scale = screenWidth.toFloat() / project.image.width,
             offset = zoomState.value.offset
         )
         imageMinScale = zoomState.value.scale * 0.75f
+        bitmap = project.image
     }
 
     val onDragStart = { offset: Offset ->
@@ -280,75 +281,77 @@ fun MainScreen(
             }
         }
 
-        Image(
-            modifier = Modifier
-                .wrapContentSize(unbounded = true, align = Alignment.TopStart)
-                .graphicsLayer(
-                    scaleX = immutableZoomState.scale,
-                    scaleY = immutableZoomState.scale,
-                    translationX = -immutableZoomState.offset.x,
-                    translationY = -immutableZoomState.offset.y,
-                    transformOrigin = TransformOrigin(0f, 0f)
-                )
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        // Wait for the first down event (gesture starts)
-                        val firstDown = awaitFirstDown(requireUnconsumed = false)
-                        val position = firstDown.position
-                        var offset = Offset.Zero + position
+        bitmap?.let {
+            Image(
+                modifier = Modifier
+                    .wrapContentSize(unbounded = true, align = Alignment.TopStart)
+                    .graphicsLayer(
+                        scaleX = immutableZoomState.scale,
+                        scaleY = immutableZoomState.scale,
+                        translationX = -immutableZoomState.offset.x,
+                        translationY = -immutableZoomState.offset.y,
+                        transformOrigin = TransformOrigin(0f, 0f)
+                    )
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            // Wait for the first down event (gesture starts)
+                            val firstDown = awaitFirstDown(requireUnconsumed = false)
+                            val position = firstDown.position
+                            var offset = Offset.Zero + position
 
-                        do {
-                            val event = awaitPointerEvent()
-                            val canceled = event.changes.fastAny { it.isConsumed }
+                            do {
+                                val event = awaitPointerEvent()
+                                val canceled = event.changes.fastAny { it.isConsumed }
 
-                            if (!canceled) {
-                                if (!isDragging) {
-                                    isDragging = true
-                                    if (drawMode) {
-                                        offset += event.calculatePan()
-                                        onDragStart(offset)
+                                if (!canceled) {
+                                    if (!isDragging) {
+                                        isDragging = true
+                                        if (drawMode) {
+                                            offset += event.calculatePan()
+                                            onDragStart(offset)
+                                        }
+                                    } else {
+                                        onDrag(
+                                            event
+                                        )
                                     }
-                                } else {
-                                    onDrag(
-                                        event
-                                    )
+
+                                    event.changes.fastForEach {
+                                        if (it.positionChanged()) {
+                                            it.consume()
+                                        }
+                                    }
                                 }
 
-                                event.changes.fastForEach {
-                                    if (it.positionChanged()) {
-                                        it.consume()
-                                    }
+                                if (canceled || event.changes.fastAll { !it.pressed }) {
+                                    isDragging = false // Drag ended
+                                    drawMode = false
+                                    onDragEnd()
                                 }
-                            }
-
-                            if (canceled || event.changes.fastAll { !it.pressed }) {
-                                isDragging = false // Drag ended
-                                drawMode = false
-                                onDragEnd()
-                            }
-                        } while (isDragging)
-                    }
-                }
-                .then(
-                    if (immutableZoomState.childRect == null) {
-                        Modifier.onGloballyPositioned { layoutCoordinates ->
-                            val positionInParent = layoutCoordinates.positionInParent()
-                            val childRect = Rect(
-                                positionInParent.x,
-                                positionInParent.y,
-                                positionInParent.x + layoutCoordinates.size.width,
-                                positionInParent.y + layoutCoordinates.size.height
-                            )
-                            zoomState.value = immutableZoomState.copy(
-                                childRect = childRect
-                            )
+                            } while (isDragging)
                         }
-                    } else Modifier
-                ),
-            bitmap = bitmap.asImageBitmap(),
-            contentScale = ContentScale.None,
-            contentDescription = "image",
-        )
+                    }
+                    .then(
+                        if (immutableZoomState.childRect == null) {
+                            Modifier.onGloballyPositioned { layoutCoordinates ->
+                                val positionInParent = layoutCoordinates.positionInParent()
+                                val childRect = Rect(
+                                    positionInParent.x,
+                                    positionInParent.y,
+                                    positionInParent.x + layoutCoordinates.size.width,
+                                    positionInParent.y + layoutCoordinates.size.height
+                                )
+                                zoomState.value = immutableZoomState.copy(
+                                    childRect = childRect
+                                )
+                            }
+                        } else Modifier
+                    ),
+                bitmap = it.asImageBitmap(),
+                contentScale = ContentScale.None,
+                contentDescription = "image",
+            )
+        }
 
         DrawAllOnScreen(lineList, zoomState)
 
@@ -396,12 +399,14 @@ fun MainScreen(
                 },
                 onEdit = { editOpened = true },
                 onExport = {
-                    drawAllAndExport(
-                        bitmap,
-                        lineList,
-                        mContext,
-                        activity
-                    )
+                    bitmap?.let {
+                        drawAllAndExport(
+                            it,
+                            lineList,
+                            mContext,
+                            activity
+                        )
+                    }
                 },
                 onSettings = { settingsOpened = true },
                 onAdd = { drawMode = !drawMode }
