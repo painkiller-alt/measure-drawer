@@ -32,15 +32,20 @@ fun ColorPicker(
             Box(
                 contentAlignment = Alignment.Center
             ) {
+                val border = if (color.value == it) {
+                    Modifier.border(
+                        BorderStroke(width = 2.dp, color = palette.onSurfaceText),
+                        shape = CircleShape
+                    )
+                } else {
+                    Modifier
+                }
+
                 Box(
                     Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .border(
-                            if (color.value == it) BorderStroke(width = 2.dp, color = palette.onSurfaceText)
-                            else BorderStroke(width = 0.dp, color = palette.surface),
-                            shape = CircleShape
-                        )
+                        .then(border)
                 )
 
                 Box(
@@ -49,6 +54,11 @@ fun ColorPicker(
                         .clickable { color.value = it }
                         .size(30.dp)
                         .background(it)
+                        .border(
+                            width = 1.dp,
+                            color = palette.onBackground,
+                            shape = CircleShape
+                        )
                 )
             }
         }
