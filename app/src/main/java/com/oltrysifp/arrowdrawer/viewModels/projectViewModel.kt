@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.oltrysifp.arrowdrawer.models.Line
+import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.repositories.ProjectRepository
 import com.oltrysifp.arrowdrawer.util.log
@@ -25,6 +26,9 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
     private val _currentLines = MutableStateFlow<List<Line>>(emptyList())
     val currentLines = _currentLines.asStateFlow()
 
+    private val _canvasSettings = MutableStateFlow(LineSettings())
+    val canvasSettings = _canvasSettings.asStateFlow()
+
     private val _isSaving = MutableStateFlow(false)
     val isSaving = _isSaving.asStateFlow()
 
@@ -38,7 +42,10 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
             saveTrigger.collectLatest {
                 withContext(Dispatchers.IO) {
                     _currentProject.value?.let { project ->
-                        val updatedProject = project.copy(objects = _currentLines.value)
+                        val updatedProject = project.copy(
+                            objects = _currentLines.value,
+                            settings = _canvasSettings.value
+                        )
                         repository.saveProject(updatedProject)
                         saveTrigger.value = false
                     }
@@ -63,6 +70,7 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
             repository.loadProject(name)?.let { loadedProject ->
                 _currentProject.value = loadedProject
                 _currentLines.value = loadedProject.objects
+                _canvasSettings.value = loadedProject.settings
             }
         }
     }
@@ -70,7 +78,9 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
     fun forceSave() {
         CoroutineScope(Dispatchers.IO).launch {
             _currentProject.value?.let { project ->
-                val updatedProject = project.copy(objects = _currentLines.value)
+                val updatedProject = project.copy(
+                    objects = _currentLines.value
+                )
                 repository.saveProject(updatedProject)
                 log("saved by exit")
             }
@@ -104,6 +114,10 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
 
     fun updateLines(lines: List<Line>) {
         _currentLines.value = lines
+    }
+
+    fun updateCurrentProjectSettings(settings: LineSettings) {
+        _canvasSettings.value = settings
     }
 
     fun triggerSave() {

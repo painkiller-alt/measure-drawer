@@ -7,8 +7,12 @@ data class Project (
     val name: String,
     val image: Bitmap,
     val objects: List<Line>,
-    val lastEdit: Long = System.currentTimeMillis()
+    val lastEdit: Long = System.currentTimeMillis(),
+    val settings: LineSettings = LineSettings()
 )
 
 @Serializable
-data class ProjectMeta(val lastEdit: Long)
+data class ProjectMeta(
+    val lastEdit: Long,
+    val settings: LineSettings
+)

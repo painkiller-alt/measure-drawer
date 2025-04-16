@@ -57,7 +57,6 @@ import com.oltrysifp.arrowdrawer.models.Action
 import com.oltrysifp.arrowdrawer.models.AddAction
 import com.oltrysifp.arrowdrawer.models.DeleteAction
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.models.enums.InheritType
 import com.oltrysifp.arrowdrawer.models.redoAction
@@ -118,6 +117,8 @@ fun MainScreen(
     val mContext = LocalContext.current
     val activity = (mContext as? ComponentActivity) ?: return
 
+    val canvasSettings by viewModel.canvasSettings.collectAsState()
+
     val bitmap = project.image
 
     val lineList = remember { mutableStateListOf<Line>() }
@@ -133,8 +134,6 @@ fun MainScreen(
 
     var isDragging by remember { mutableStateOf(false) }
     var drawMode by remember { mutableStateOf(false) }
-
-    val canvasSettings = remember { mutableStateOf(LineSettings()) }
 
     val focusPoint = remember { mutableStateOf<Offset?>(null) }
     var focusedLine by remember { mutableStateOf<Line?>(null) }
@@ -184,13 +183,13 @@ fun MainScreen(
                         initialOffset,
                         initialOffset,
 
-                        customCoefficient = canvasSettings.value.customCoefficient,
-                        customSize = canvasSettings.value.customSize,
-                        customUnit = canvasSettings.value.customUnit,
+                        customCoefficient = canvasSettings.customCoefficient,
+                        customSize = canvasSettings.customSize,
+                        customUnit = canvasSettings.customUnit,
 
-                        color = canvasSettings.value.color,
-                        thickness = canvasSettings.value.thickness,
-                        fontSize = canvasSettings.value.fontSize
+                        color = canvasSettings.color,
+                        thickness = canvasSettings.thickness,
+                        fontSize = canvasSettings.fontSize
                     )
                     lineList.add(newLine)
                     actionStack.add(AddAction(newLine))
@@ -261,7 +260,8 @@ fun MainScreen(
 
                     onInherit = { newSettings ->
                         if (inheritType == InheritType.CANVAS) {
-                            canvasSettings.value = newSettings
+                            viewModel.updateCurrentProjectSettings(newSettings)
+                            viewModel.triggerSave()
                         } else {
                             focused.thickness = newSettings.thickness
                             focused.color = newSettings.color
@@ -413,7 +413,8 @@ fun MainScreen(
                 canvasSettings,
 
                 onExit = { newSettings ->
-                    canvasSettings.value = newSettings
+                    viewModel.updateCurrentProjectSettings(newSettings)
+                    viewModel.triggerSave()
                     settingsOpened = false
                 },
                 onInherit = {

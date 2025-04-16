@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.models.LineDto
+import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.models.ProjectMeta
 import kotlinx.serialization.json.Json
@@ -13,7 +14,10 @@ import java.io.FileOutputStream
 
 class ProjectRepository(context: Context) {
     private val projectsDir = File(context.getExternalFilesDir(null), "projects")
-    private val json = Json { prettyPrint = true }
+    private val json = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+    }
 
     init {
         if (!projectsDir.exists()) {
@@ -50,7 +54,7 @@ class ProjectRepository(context: Context) {
 
             val metaFile = File(projectDir, "meta.json")
             metaFile.writeText(
-                json.encodeToString(ProjectMeta(project.lastEdit))
+                json.encodeToString(ProjectMeta(project.lastEdit, project.settings))
             )
 
             true
@@ -73,13 +77,13 @@ class ProjectRepository(context: Context) {
                 .map { Line.fromDto(it) }
 
             val metaFile = File(projectDir, "meta.json")
-            val lastEdit = if (metaFile.exists()) {
-                json.decodeFromString<ProjectMeta>(metaFile.readText()).lastEdit
+            val projectMeta = if (metaFile.exists()) {
+                json.decodeFromString<ProjectMeta>(metaFile.readText())
             } else {
-                0L
+                ProjectMeta(0L, LineSettings())
             }
 
-            Project(name, image, objects, lastEdit)
+            Project(name, image, objects, projectMeta.lastEdit, projectMeta.settings)
         } catch (e: Exception) {
             e.printStackTrace()
             null

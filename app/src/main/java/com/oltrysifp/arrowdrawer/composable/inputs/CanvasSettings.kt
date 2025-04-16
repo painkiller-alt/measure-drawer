@@ -37,14 +37,14 @@ import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
 fun CanvasSettings(
-    canvasSettings: MutableState<LineSettings>,
+    canvasSettings: LineSettings,
 
     onExit: (LineSettings) -> Unit,
     onInherit: () -> Unit
 ) {
-    val color = remember { mutableStateOf(canvasSettings.value.color) }
-    val thickness = remember { mutableFloatStateOf(canvasSettings.value.thickness) }
-    val fontSize = remember { mutableFloatStateOf(canvasSettings.value.fontSize) }
+    val color = remember { mutableStateOf(canvasSettings.color) }
+    val thickness = remember { mutableFloatStateOf(canvasSettings.thickness) }
+    val fontSize = remember { mutableFloatStateOf(canvasSettings.fontSize) }
 
     Box(
         Modifier
