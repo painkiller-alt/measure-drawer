@@ -281,7 +281,7 @@ fun MainScreen(
             }
         }
 
-        bitmap?.let {
+        bitmap?.let { bt ->
             Image(
                 modifier = Modifier
                     .wrapContentSize(unbounded = true, align = Alignment.TopStart)
@@ -347,7 +347,7 @@ fun MainScreen(
                             }
                         } else Modifier
                     ),
-                bitmap = it.asImageBitmap(),
+                bitmap = bt.asImageBitmap(),
                 contentScale = ContentScale.None,
                 contentDescription = "image",
             )
@@ -399,9 +399,9 @@ fun MainScreen(
                 },
                 onEdit = { editOpened = true },
                 onExport = {
-                    bitmap?.let {
+                    bitmap?.let { bt ->
                         drawAllAndExport(
-                            it,
+                            bt,
                             lineList,
                             mContext,
                             activity
