@@ -57,8 +57,6 @@ fun CentralContent(
                 .onGloballyPositioned {
                     height = it.size.height
                     width = it.size.width
-
-                    log(width)
                 }
                 .scale(cardSize)
                 .padding(6.dp)

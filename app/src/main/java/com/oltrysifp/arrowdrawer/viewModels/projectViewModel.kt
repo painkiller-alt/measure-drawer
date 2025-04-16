@@ -40,14 +40,13 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
         // Debounced save handler
         viewModelScope.launch {
             saveTrigger.collectLatest {
-                withContext(Dispatchers.IO) {
-                    _currentProject.value?.let { project ->
-                        val updatedProject = project.copy(
-                            objects = _currentLines.value,
-                            settings = _canvasSettings.value
-                        )
-                        repository.saveProject(updatedProject)
-                        saveTrigger.value = false
+                if (it) {
+                    withContext(Dispatchers.IO) {
+                        _currentProject.value?.let { project ->
+                            val updatedProject = getSaveInstance(project)
+                            repository.saveProject(updatedProject)
+                            saveTrigger.value = false
+                        }
                     }
                 }
             }
@@ -78,9 +77,7 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
     fun forceSave() {
         CoroutineScope(Dispatchers.IO).launch {
             _currentProject.value?.let { project ->
-                val updatedProject = project.copy(
-                    objects = _currentLines.value
-                )
+                val updatedProject = getSaveInstance(project)
                 repository.saveProject(updatedProject)
                 log("saved by exit")
             }
@@ -110,6 +107,13 @@ class ProjectViewModel(private val repository: ProjectRepository) : ViewModel() 
                 loadProjectsList() // Refresh list of project names
             }
         }
+    }
+
+    private fun getSaveInstance(project: Project): Project {
+        return project.copy(
+            objects = _currentLines.value,
+            settings = _canvasSettings.value
+        )
     }
 
     fun updateLines(lines: List<Line>) {

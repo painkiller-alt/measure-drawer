@@ -159,6 +159,13 @@ fun MainScreen(
         bitmap = project.image
     }
 
+    LaunchedEffect(focusPoint.value) {
+        if (focusPoint.value == null) {
+            viewModel.updateLines(lineList.toList())
+            viewModel.triggerSave()
+        }
+    }
+
     val onDragStart = { offset: Offset ->
         redoStack.clear()
         initialOffset = offset
@@ -182,7 +189,7 @@ fun MainScreen(
                 if (focusPoint.value == null) {
                     val newLine = Line(
                         initialOffset,
-                        initialOffset,
+                        generalOffset,
 
                         customCoefficient = canvasSettings.customCoefficient,
                         customSize = canvasSettings.customSize,
@@ -223,8 +230,6 @@ fun MainScreen(
         focusPoint.value = null
         initialOffset = Offset.Zero
         generalOffset = Offset.Zero
-        viewModel.updateLines(lineList.toList())
-        viewModel.triggerSave()
     }
 
     Box(
