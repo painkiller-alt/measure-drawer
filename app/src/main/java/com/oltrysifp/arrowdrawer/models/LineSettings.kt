@@ -2,8 +2,6 @@ package com.oltrysifp.arrowdrawer.models
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.core.graphics.toColor
-import com.oltrysifp.arrowdrawer.util.log
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -20,7 +18,7 @@ data class LineSettings (
     val fontSize: Float = 11f,
 
     var customCoefficient: Float? = null,
-    var customSize: Int? = null,
+    var customSize: Float? = null,
     var customUnit: String? = null
 )
 

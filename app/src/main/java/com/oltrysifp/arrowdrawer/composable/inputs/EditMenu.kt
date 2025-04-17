@@ -1,10 +1,14 @@
 package com.oltrysifp.arrowdrawer.composable.inputs
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,19 +29,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.oltrysifp.arrowdrawer.R
 import com.oltrysifp.arrowdrawer.composable.HSpacer
 import com.oltrysifp.arrowdrawer.composable.VSpacer
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ColorPicker
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.FontSizePicker
 import com.oltrysifp.arrowdrawer.composable.arrowSettings.ThicknessPicker
+import com.oltrysifp.arrowdrawer.composable.toast
 import com.oltrysifp.arrowdrawer.models.Line
 import com.oltrysifp.arrowdrawer.util.Palette
+import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
@@ -48,7 +55,8 @@ fun EditMenu(
     onDelete: () -> Unit,
     onInherit: () -> Unit
 ) {
-    val length = line.length()
+    val length = remember { line.length() }
+    val context = LocalContext.current
 
     val text = remember { mutableStateOf(line.mutatedLength().toInt().toString()) }
 
@@ -64,11 +72,15 @@ fun EditMenu(
     fun getNewLine(): Line {
         val newLine = line.copy()
 
-        val coefficient = text.value.toInt().toFloat() / length
+        val floatText = text.value.replace(",", ".") + "F"
+        val floatValue = floatText.toFloat()
+
+        val coefficient = floatValue / length
         if (isCustomCoefficient) {
             newLine.customCoefficient = coefficient
         } else if (isCustomSize) {
-            newLine.customSize = text.value.toInt()
+            newLine.customSize = floatValue
+            log(newLine.customSize)
         } else {
             newLine.customCoefficient = null
             newLine.customSize = null
@@ -93,24 +105,33 @@ fun EditMenu(
         text.value = newLine.mutatedLength().toInt().toString()
     }
 
-    Dialog(
-        onDismissRequest = {
-            try {
-                onExit(getNewLine())
-            } catch (e: Error) {
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        try {
+                            onExit(getNewLine())
+                        } catch (e: Exception) {
+                            context.toast("Ошибка")
+                        }
+                    }
+                )
             }
-        },
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
+            .background(Color(0x59000000)),
+        contentAlignment = Alignment.Center
     ) {
         Card(
             shape = RoundedCornerShape(14.dp),
             colors = CardDefaults.cardColors(
                 containerColor = palette.surface
             ),
-            modifier = Modifier.padding(horizontal = 4.dp)
+            modifier = Modifier
+                .padding(horizontal = 4.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures()
+                }
         ) {
             Column(
                 Modifier
@@ -139,7 +160,7 @@ fun EditMenu(
                                 TextFieldDefault(
                                     customUnit,
                                     enabled = isCustomSize,
-                                    maxSymbols = 3,
+                                    maxSymbols = 4,
                                     placeholder = "ед.?"
                                 )
                             }
@@ -155,7 +176,7 @@ fun EditMenu(
                             checked = isCustomSize,
                             onCheckedChange = { isChecked ->
                                 if (isChecked) {
-                                    line.customSize = length.toInt()
+                                    line.customSize = length
                                     isCustomSize = true
                                 } else {
                                     line.customSize = null

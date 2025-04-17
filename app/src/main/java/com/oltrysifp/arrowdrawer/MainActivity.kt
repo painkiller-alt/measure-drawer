@@ -116,7 +116,7 @@ fun MainScreen(
     viewModel: ProjectViewModel = viewModel()
 ) {
     val mContext = LocalContext.current
-    val activity = (mContext as? ComponentActivity) ?: return
+    val activity = remember { (mContext as? ComponentActivity) } ?: return
 
     val canvasSettings by viewModel.canvasSettings.collectAsState()
 
@@ -236,28 +236,6 @@ fun MainScreen(
         Modifier
             .fillMaxSize()
     ) {
-        if (editOpened) {
-            focusedLine?.let {
-                EditMenu(
-                    it,
-                    onExit = { newLine ->
-                        editOpened = false
-                        it.mutate(newLine)
-                    },
-                    onDelete = {
-                        editOpened = false
-
-                        actionStack.add(DeleteAction(it))
-                        lineList.remove(focusedLine)
-                        focusedLine = null
-                    },
-                    onInherit = {
-                        inheritType = InheritType.LINE
-                        editOpened = false
-                    }
-                )
-            }
-        }
         ArrowMagnifier(focusPoint, zoomState.value)
         inheritPicker?.let { inherit ->
             focusedLine?.let { focused ->
@@ -416,6 +394,29 @@ fun MainScreen(
                 onSettings = { settingsOpened = true },
                 onAdd = { drawMode = !drawMode }
             )
+        }
+
+        if (editOpened) {
+            focusedLine?.let {
+                EditMenu(
+                    it,
+                    onExit = { newLine ->
+                        editOpened = false
+                        it.mutate(newLine)
+                    },
+                    onDelete = {
+                        editOpened = false
+
+                        actionStack.add(DeleteAction(it))
+                        lineList.remove(focusedLine)
+                        focusedLine = null
+                    },
+                    onInherit = {
+                        inheritType = InheritType.LINE
+                        editOpened = false
+                    }
+                )
+            }
         }
 
         if (settingsOpened) {

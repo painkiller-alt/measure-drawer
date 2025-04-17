@@ -8,7 +8,6 @@ import com.oltrysifp.arrowdrawer.models.LineDto
 import com.oltrysifp.arrowdrawer.models.LineSettings
 import com.oltrysifp.arrowdrawer.models.Project
 import com.oltrysifp.arrowdrawer.models.ProjectMeta
-import com.oltrysifp.arrowdrawer.util.log
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
@@ -56,7 +55,6 @@ class ProjectRepository(context: Context) {
             val metaFile = File(projectDir, "meta.json")
             val text = json.encodeToString(ProjectMeta(project.lastEdit, project.settings))
             metaFile.writeText(text)
-            log(text)
 
             true
         } catch (e: Exception) {

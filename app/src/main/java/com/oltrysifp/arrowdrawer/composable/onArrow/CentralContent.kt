@@ -9,18 +9,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oltrysifp.arrowdrawer.models.Line
-import com.oltrysifp.arrowdrawer.util.log
 import com.oltrysifp.arrowdrawer.util.palette
 
 @Composable
@@ -31,17 +25,14 @@ fun CentralContent(
 ) {
     val length = line.length()
     val mutatedLength = line.mutatedLength()
-    val lengthText = if (length < 10) "%.2f".format(mutatedLength) else mutatedLength.toInt().toString()
+    val lengthText = if (mutatedLength < 10)
+        "%.2f".format(mutatedLength) else mutatedLength.toInt().toString()
     val unitText = if (line.customUnit != null) line.customUnit else ""
 
     val cardSize = when {
         length*screenImageScale > 200 -> 1f
         else -> (length / 200)*screenImageScale
     }
-
-    var width by remember { mutableIntStateOf(0) }
-    var height by remember { mutableIntStateOf(0) }
-
 
     Row(
         Modifier
@@ -54,10 +45,6 @@ fun CentralContent(
             ),
             shape = RoundedCornerShape(6.dp),
             modifier = Modifier
-                .onGloballyPositioned {
-                    height = it.size.height
-                    width = it.size.width
-                }
                 .scale(cardSize)
                 .padding(6.dp)
                 .clip(RoundedCornerShape(6.dp)),

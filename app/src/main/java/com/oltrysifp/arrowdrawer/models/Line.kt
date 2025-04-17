@@ -20,7 +20,7 @@ class Line(
     fontSize: Float = 11f,
 
     customCoefficient: Float? = null,
-    customSize: Int? = null,
+    customSize: Float? = null,
     customUnit: String? = null,
 
     val hash: Int = Random.nextInt()
@@ -42,7 +42,7 @@ class Line(
         color: Color = this.color,
         fontSize: Float = this.fontSize,
         customCoefficient: Float? = this.customCoefficient,
-        customSize: Int? = this.customSize,
+        customSize: Float? = this.customSize,
         customUnit: String? = this.customUnit,
         hash: Int = this.hash
     ): Line {
@@ -157,7 +157,7 @@ data class LineDto(
     val color: Int,
     val fontSize: Float,
     val customCoefficient: Float?,
-    val customSize: Int?,
+    val customSize: Float?,
     val customUnit: String?,
     val hash: Int
 )
